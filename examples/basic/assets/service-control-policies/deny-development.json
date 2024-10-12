@@ -1,0 +1,218 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ROOT",
+      "Effect": "Deny",
+      "NotAction": [
+        "account:Get*",
+        "aws-portal:*",
+        "billing:GetIAMAccessPreference",
+        "billing:GetSellerOfRecord",
+        "iam:CreateVirtualMFADevice",
+        "iam:DeleteVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:GetUser",
+        "iam:ListMFADevices",
+        "iam:ListVirtualMFADevices",
+        "iam:ResyncMFADevice",
+        "sts:GetSessionToken",
+        "support:*",
+        "trustedadvisor:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "aws:PrincipalArn": ["arn:aws:iam::*:root"]
+        }
+      }
+    },
+    {
+      "Sid": "IAM1",
+      "Effect": "Deny",
+      "Action": ["iam:CreateUser", "iam:CreateAccessKey"],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RAM",
+      "Effect": "Deny",
+      "Action": ["ram:CreateResourceShare", "ram:UpdateResourceShare"],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ram:RequestedAllowsExternalPrincipals": "true"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RAM1",
+      "Effect": "Deny",
+      "Action": ["ram:Delete*", "ram:Disassociate*", "ram:Update*"],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": ["arn:aws:iam::*:role/githubactions"]
+        }
+      }
+    },
+    {
+      "Sid": "S31",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "s3:x-amz-server-side-encryption": true
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "S32",
+      "Action": "s3:*",
+      "Effect": "Deny",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        },
+        "NumericLessThan": {
+          "s3:TlsVersion": 1.2
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "EBS2",
+      "Effect": "Deny",
+      "Action": "ec2:CreateVolume",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EFS1",
+      "Effect": "Deny",
+      "Action": "elasticfilesystem:CreateFileSystem",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "elasticfilesystem:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "RDS",
+      "Effect": "Deny",
+      "Action": ["rds:CreateDBInstance"],
+      "Resource": ["*"],
+      "Condition": {
+        "ForAnyValue:StringEquals": {
+          "rds:DatabaseEngine": ["mariadb", "mysql", "postgres"]
+        },
+        "Bool": {
+          "rds:StorageEncrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "AUR",
+      "Effect": "Deny",
+      "Action": "rds:CreateDBCluster",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "rds:DatabaseEngine": ["aurora*", "docdb*", "neptune"]
+        },
+        "Bool": {
+          "rds:StorageEncrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "SEC",
+      "Effect": "Deny",
+      "Action": [
+        "access-analyzer:DeleteAnalyzer",
+        "account:DisableRegion",
+        "account:EnableRegion",
+        "config:DeleteConfigRule",
+        "config:DeleteConfigurationRecorder",
+        "config:DeleteDeliveryChannel",
+        "config:StopConfigurationRecorder",
+        "ds:UnshareDirectory",
+        "ec2:CreateDefaultVpc",
+        "ec2:DeleteFlowLogs",
+        "ec2:DisableEbsEncryptionByDefault",
+        "fms:DisassociateAdminAccount",
+        "guardduty:DeleteDetector",
+        "guardduty:DeleteIPSet",
+        "guardduty:DeleteInvitations",
+        "guardduty:DeleteMembers",
+        "guardduty:DeleteThreatIntelSet",
+        "guardduty:DisassociateFromMasterAccount",
+        "guardduty:DisassociateMembers",
+        "guardduty:StopMonitoringMembers",
+        "guardduty:UpdateDetector",
+        "iam:DeleteAccountPasswordPolicy",
+        "iam:UpdateAccountPasswordPolicy",
+        "macie2:DeleteMember",
+        "macie2:DisableMacie",
+        "macie2:DisableOrganizationAdminAccount",
+        "macie2:DisassociateFromAdministratorAccount",
+        "macie2:DisassociateMember",
+        "macie2:UpdateMacieSession",
+        "macie2:UpdateMemberSession",
+        "organizations:LeaveOrganization",
+        "s3:PutAccountPublicAccessBlock",
+        "securityhub:DeleteInvitations",
+        "securityhub:DeleteMembers",
+        "securityhub:DisableSecurityHub",
+        "securityhub:DisassociateFromMasterAccount",
+        "securityhub:DisassociateMembers"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    }
+  ]
+}

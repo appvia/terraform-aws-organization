@@ -1,0 +1,198 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CT",
+      "Effect": "Deny",
+      "Action": [
+        "cloudtrail:DeleteTrail",
+        "cloudtrail:PutEventSelectors",
+        "cloudtrail:StopLogging",
+        "cloudtrail:UpdateTrail"
+      ],
+      "Resource": ["arn:aws:cloudtrail:*:*:trail/AWSA*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "CON",
+      "Effect": "Deny",
+      "Action": [
+        "config:DeleteConfigurationRecorder",
+        "config:DeleteDeliveryChannel",
+        "config:DeleteRetentionConfig*",
+        "config:PutConfigurationRecorder",
+        "config:PutDeliveryChannel",
+        "config:PutRetentionConfig*",
+        "config:StopConfigurationRecorder",
+        "config:DeleteAggregationAuthorization",
+        "config:DeleteConfigurationAggregator",
+        "config:PutAggregationAuthorization",
+        "config:PutConfigurationAggregator"
+      ],
+      "Resource": ["*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "CWE",
+      "Effect": "Deny",
+      "Action": [
+        "events:PutRule",
+        "events:PutTargets",
+        "events:RemoveTargets",
+        "events:DisableRule",
+        "events:DeleteRule"
+      ],
+      "Resource": ["arn:aws:events:*:*:rule/AWSA*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RUL",
+      "Effect": "Deny",
+      "Action": [
+        "config:PutConfigRule",
+        "config:DeleteConfigRule",
+        "config:DeleteEvaluationResults"
+      ],
+      "Resource": ["arn:aws:config:*:*:config-rule/*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Effect": "Deny",
+      "Action": [
+        "kms:DeleteAlias",
+        "kms:UpdateAlias",
+        "kms:DisableKey",
+        "kms:ImportKeyMaterial",
+        "kms:PutKeyPolicy",
+        "kms:ScheduleKeyDeletion"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        },
+        "ForAnyValue:StringLike": {
+          "kms:ResourceAliases": "alias/accelerator*"
+        }
+      }
+    },
+    {
+      "Sid": "IAM",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:DeletePolic*",
+        "iam:SetDefaultPolicyVersion",
+        "iam:CreatePolicyVersion"
+      ],
+      "Resource": "arn:aws:iam::*:policy/AWSA*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "SEC",
+      "Effect": "Deny",
+      "Action": [
+        "access-analyzer:DeleteAnalyzer",
+        "account:DisableRegion",
+        "account:EnableRegion",
+        "ds:UnshareDirectory",
+        "ec2:CreateDefaultVpc",
+        "ec2:DisableEbsEncryptionByDefault",
+        "fms:DisassociateAdminAccount",
+        "guardduty:AcceptInvitation",
+        "guardduty:CreateMembers",
+        "guardduty:DeclineInvitations",
+        "guardduty:Delete*",
+        "guardduty:DisableOrganizationAdminAccount",
+        "guardduty:Disassociate*",
+        "guardduty:InviteMembers",
+        "guardduty:StopMonitoringMembers",
+        "guardduty:UpdateDetector",
+        "guardduty:UpdateFindingsFeedback",
+        "guardduty:UpdateOrganizationConfiguration",
+        "guardduty:UpdatePublishingDestination",
+        "iam:DeleteAccountPass*",
+        "iam:UpdateAccountPass*",
+        "macie2:AcceptInvitation",
+        "macie2:CreateInvitations",
+        "macie2:CreateMember",
+        "macie2:DeclineInvitations",
+        "macie2:DeleteInvitations",
+        "macie2:DeleteMember",
+        "macie2:DisableMacie",
+        "macie2:DisableOrganizationAdminAccount",
+        "macie2:Disassociate*",
+        "macie2:EnableMacie",
+        "macie2:EnableOrganizationAdminAccount",
+        "macie2:UpdateMacieSession",
+        "macie2:UpdateMemberSession",
+        "macie2:UpdateOrganizationConfiguration",
+        "s3:PutAccountPublicAccessBlock",
+        "securityhub:BatchDisableStandards",
+        "securityhub:DeclineInvitations",
+        "securityhub:DeleteActionTarget",
+        "securityhub:DeleteInsight",
+        "securityhub:DeleteInvitations",
+        "securityhub:DisableSecurityHub",
+        "securityhub:DisassociateFromMasterAccount",
+        "securityhub:DisassociateMembers",
+        "securityhub:UpdateSecurityHubConfiguration",
+        "securityhub:UpdateStandardsControl"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    }
+  ]
+}

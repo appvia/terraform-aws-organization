@@ -1,0 +1,207 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ROOT",
+      "Effect": "Deny",
+      "NotAction": [
+        "account:Get*",
+        "aws-portal:*",
+        "billing:GetIAMAccessPreference",
+        "billing:GetSellerOfRecord",
+        "iam:CreateVirtualMFADevice",
+        "iam:DeleteVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:GetUser",
+        "iam:ListMFADevices",
+        "iam:ListVirtualMFADevices",
+        "iam:ResyncMFADevice",
+        "sts:GetSessionToken",
+        "support:*",
+        "trustedadvisor:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnLike": {
+          "aws:PrincipalARN": ["arn:aws:iam::*:root"]
+        }
+      }
+    },
+    {
+      "Sid": "EBS2",
+      "Effect": "Deny",
+      "Action": "ec2:CreateVolume",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EFS1",
+      "Effect": "Deny",
+      "Action": "elasticfilesystem:CreateFileSystem",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "elasticfilesystem:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EC21",
+      "Effect": "Deny",
+      "Action": ["ec2:RunInstances"],
+      "Resource": ["*"],
+      "Condition": {
+        "StringNotEquals": {
+          "ec2:InstanceType": [
+            "c5.large",
+            "m5.large",
+            "r5.large",
+            "t1.micro",
+            "t2.large",
+            "t2.medium"
+          ]
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RDS3",
+      "Effect": "Deny",
+      "Action": ["rds:CreateDBCluster"],
+      "Resource": ["*"],
+      "Condition": {
+        "StringNotEquals": {
+          "rds:DatabaseClass": [
+            "db.t2.medium",
+            "db.t2.micro",
+            "db.t3.medium",
+            "db.t3.micro",
+            "db.t3.small"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RDS4",
+      "Effect": "Deny",
+      "Action": ["rds:CreateDBCluster", "rds:CreateDBInstance"],
+      "Resource": ["*"],
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Schedule": "true"
+        }
+      }
+    },
+    {
+      "Sid": "NET1",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AssociateTransitGatewayRouteTable",
+        "ec2:CreateTransitGateway",
+        "ec2:CreateTransitGatewayVpcAttachment",
+        "ec2:CreateVpcEndpoint",
+        "ec2:CreateVpcEndpointServiceConfiguration",
+        "ec2:CreateVpcPeeringConnection",
+        "ec2:DeleteTransitGateway",
+        "ec2:DeleteTransitGatewayVpcAttachment",
+        "ec2:DeleteVpcEndpointServiceConfigurations",
+        "ec2:DeleteVpcEndpoints",
+        "ec2:DisassociateTransitGatewayRouteTable",
+        "ec2:ModifyTransitGateway"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NET2",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AcceptVpcPeeringConnection",
+        "ec2:DeleteVpcPeeringConnection"
+      ],
+      "Resource": "arn:aws:ec2:*:*:vpc-peering-connection/*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "SAND1",
+      "Effect": "Deny",
+      "Action": [
+        "a4b:*",
+        "access-analyzer:*",
+        "appflow:*",
+        "aws-marketplace-management:*",
+        "aws-marketplace:*",
+        "aws-portal:*",
+        "budgets:*",
+        "ce:*",
+        "chime:*",
+        "cloudfront:*",
+        "config:*",
+        "cur:*",
+        "directconnect:*",
+        "ds:AcceptSharedDir*",
+        "ds:DisableSso",
+        "ds:EnableSso",
+        "ds:ShareDir*",
+        "fms:*",
+        "gamelift:*",
+        "globalaccelerator:*",
+        "health:*",
+        "iq:*",
+        "lightsail:*",
+        "networkmanager:*",
+        "pricing:*",
+        "ram:AcceptResourceShareInv*",
+        "ram:AssociateResourceShare",
+        "ram:CreateResourceShare",
+        "ram:EnableSharingWithAwsOrg*",
+        "shield:*",
+        "sts:*",
+        "support:*",
+        "trustedadvisor:*",
+        "waf-regional:*",
+        "waf:*",
+        "wafv2:*"
+      ],
+      "Resource": ["*"],
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": ["${HOME_REGION}"]
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    }
+  ]
+}

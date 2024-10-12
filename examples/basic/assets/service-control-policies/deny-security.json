@@ -1,0 +1,123 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ROOT",
+      "Effect": "Deny",
+      "NotAction": [
+        "account:Get*",
+        "aws-portal:*",
+        "billing:GetIAMAccessPreference",
+        "billing:GetSellerOfRecord",
+        "iam:CreateVirtualMFADevice",
+        "iam:DeleteVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:GetUser",
+        "iam:ListMFADevices",
+        "iam:ListVirtualMFADevices",
+        "iam:ResyncMFADevice",
+        "sts:GetSessionToken",
+        "support:*",
+        "trustedadvisor:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "aws:PrincipalArn": ["arn:aws:iam::*:root"]
+        }
+      }
+    },
+    {
+      "Sid": "IAM",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:DeletePolic*",
+        "iam:SetDefaultPolicyVersion",
+        "iam:CreatePolicyVersion"
+      ],
+      "Resource": "arn:aws:iam::*:policy/AWSA*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RUL",
+      "Effect": "Deny",
+      "Action": [
+        "config:PutConfigRule",
+        "config:DeleteConfigRule",
+        "config:DeleteEvaluationResults"
+      ],
+      "Resource": ["arn:aws:config:*:*:config-rule/*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "KIN",
+      "Effect": "Deny",
+      "Action": [
+        "kinesis:Create*",
+        "kinesis:Decrease*",
+        "kinesis:Delete*",
+        "kinesis:Deregister*",
+        "kinesis:Start*",
+        "kinesis:Stop*",
+        "kinesis:Update*",
+        "firehose:Create*",
+        "firehose:Delete*",
+        "firehose:Start*",
+        "firehose:Stop*",
+        "firehose:Update*"
+      ],
+      "Resource": [
+        "arn:aws:firehose:*:*:deliverystream/AWSA*",
+        "arn:aws:kinesis:*:*:stream/AWSA*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "EBS2",
+      "Effect": "Deny",
+      "Action": "ec2:CreateVolume",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EFS1",
+      "Effect": "Deny",
+      "Action": "elasticfilesystem:CreateFileSystem",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "elasticfilesystem:Encrypted": "false"
+        }
+      }
+    }
+  ]
+}

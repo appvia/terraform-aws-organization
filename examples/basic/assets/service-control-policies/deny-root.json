@@ -1,0 +1,87 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LZ1",
+      "Effect": "Deny",
+      "Action": ["cloudformation:*"],
+      "Resource": ["arn:aws:cloudformation:*:*:stack/AWSA*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "LZ2",
+      "Effect": "Deny",
+      "Action": [
+        "events:DeleteRule",
+        "events:DisableRule",
+        "events:PutRule",
+        "events:PutTargets",
+        "events:RemoveTargets"
+      ],
+      "Resource": ["arn:aws:events:*:*:rule/AWSA*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "LZ3",
+      "Effect": "Deny",
+      "Action": [
+        "kms:DeleteAlias",
+        "kms:UpdateAlias",
+        "kms:DisableKey",
+        "kms:ImportKeyMaterial",
+        "kms:PutKeyPolicy",
+        "kms:ScheduleKeyDeletion"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:aws:iam::*:role/AWSA*",
+            "arn:aws:iam::*:role/cdk-accel-*"
+          ]
+        },
+        "ForAnyValue:StringLike": {
+          "kms:ResourceAliases": "alias/accelerator*"
+        }
+      }
+    },
+    {
+      "Sid": "CO01",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AcceptReservedInstancesExchangeQuote",
+        "ec2:CancelCapacityReservation",
+        "ec2:CancelReservedInstancesListing",
+        "ec2:CreateCapacityReservation",
+        "ec2:CreateReservedInstancesListing",
+        "ec2:PurchaseReservedInstancesOffering",
+        "savinsplans:CreateSavingsPlan"
+      ],
+      "Resource": ["*"],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    }
+  ]
+}
