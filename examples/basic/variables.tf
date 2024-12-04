@@ -6,35 +6,35 @@ variable "tags" {
 
 variable "tagging_policies" {
   description = "A list of tagging policies to apply to the organization's root."
-  type = list(object({
-    name        = string
+  type = map(object({
     description = string
     filename    = string
-    target_id   = string
+    key         = optional(string)
+    target_id   = optional(string)
   }))
-  default = []
+  default = {}
 }
 
 variable "backup_policies" {
   description = "A list of backup policies to apply to the organization's root."
-  type = list(object({
-    name        = string
+  type = map(object({
     description = string
     filename    = string
-    target_id   = string
+    key         = optional(string)
+    target_id   = optional(string)
   }))
-  default = []
+  default = {}
 }
 
 variable "service_control_policies" {
   description = "A list of service control policies (SCPs) to apply to the organization's root."
-  type = list(object({
-    name        = string
+  type = map(object({
     description = string
     filename    = string
-    target_id   = string
+    key         = optional(string)
+    target_id   = optional(string)
   }))
-  default = []
+  default = {}
 }
 
 variable "enable_delegation" {
@@ -55,7 +55,18 @@ variable "enable_delegation" {
     macie = optional(object({
       account_name = string
     }), null)
+    inspection = optional(object({
+      account_name = string
+    }), null)
   })
+  default = {
+    organizations = null
+    securityhub   = null
+    guardduty     = null
+    ipam          = null
+    macie         = null
+    inspection    = null
+  }
 }
 
 variable "enable_policy_types" {

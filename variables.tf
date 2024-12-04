@@ -29,52 +29,7 @@ variable "organization" {
     })), [])
   })
 
-  default = {
-    units = [
-      {
-        name = "Infrastructure",
-        key  = "infrastructure",
-      },
-      {
-        name = "Security",
-        key  = "security",
-      },
-      {
-        name = "Transitional"
-        key  = "transitional",
-      },
-      {
-        name = "Suspended",
-        key  = "suspended",
-      },
-      {
-        name = "Graveyard",
-        key  = "graveyard",
-      },
-      {
-        name = "Deployments",
-        key  = "deployments",
-      },
-      {
-        name = "Sandbox",
-        key  = "sandbox",
-      },
-      {
-        name = "Workloads",
-        key  = "workloads",
-        units = [
-          {
-            name = "Development",
-            key  = "workloads/development",
-          },
-          {
-            name = "Production",
-            key  = "workloads/production",
-          },
-        ]
-      },
-    ]
-  }
+  default = {}
 }
 
 variable "enable_aws_services" {
@@ -110,36 +65,48 @@ variable "enable_policy_types" {
 }
 
 variable "tagging_policies" {
-  description = "A list of tagging policies to apply to the organization's root."
-  type = list(object({
-    name        = string
+  description = "A map of tagging policies to apply to the organization's root."
+  type = map(object({
     description = string
-    content     = string
-    target      = string
+    # A description for the tagging policy
+    content = string
+    # The content of the tagging policy
+    key = optional(string)
+    # If we created the organizational unit, this is the key to attach the policy to
+    target_id = optional(string)
+    # If the organizational unit already exists, this is the target ID to attach the policy to
   }))
-  default = []
+  default = {}
 }
 
 variable "backup_policies" {
-  description = "A list of backup policies to apply to the organization's root."
-  type = list(object({
-    name        = string
+  description = "A map of backup policies to apply to the organization's root."
+  type = map(object({
     description = string
-    content     = string
-    key         = string
+    # A description for the backup policy
+    content = string
+    # The content of the backup policy
+    key = optional(string)
+    # If we created the organizational unit, this is the key to attach the policy to
+    target_id = optional(string)
+    # If the organizational unit already exists, this is the target ID to attach the policy to
   }))
-  default = []
+  default = {}
 }
 
 variable "service_control_policies" {
-  description = "A list of service control policies (SCPs) to apply to the organization's root."
-  type = list(object({
-    name        = string
+  description = "A map of service control policies (SCPs) to apply to the organization's root."
+  type = map(object({
     description = string
-    content     = string
-    key         = string
+    # A description for the service control policy
+    content = string
+    # The content of the service control policy
+    key = optional(string)
+    # If we created the organizational unit, this is the key to attach the policy to
+    target_id = optional(string)
+    # If the organizational unit already exists, this is the target ID to attach the policy to
   }))
-  default = []
+  default = {}
 }
 
 variable "enable_delegation" {
@@ -147,21 +114,27 @@ variable "enable_delegation" {
   type = object({
     organizations = optional(object({
       account_name = string
+      # The name of the account to delegate the management of Organizations to
     }), null)
     securityhub = optional(object({
       account_name = string
+      # The name of the account to delegate the management of Security Hub to
     }), null)
     guardduty = optional(object({
       account_name = string
+      # The name of the account to delegate the management of GuardDuty to
     }), null)
     ipam = optional(object({
       account_name = string
+      # The name of the account to delegate the management of IPAM to
     }), null)
     macie = optional(object({
       account_name = string
+      # The name of the account to delegate the management of Macie to
     }), null)
     inspection = optional(object({
       account_name = string
+      # The name of the account to delegate the management of Inspector to
     }), null)
   })
   default = {

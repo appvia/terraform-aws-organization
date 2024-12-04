@@ -1,18 +1,18 @@
 
-service_control_policies = [
-  {
-    name        = "deny-root",
+service_control_policies = {
+  "deny-root" = {
     description = "Control policies applicable to all accounts",
     filename    = "assets/service-control-policies/deny-root.json",
-    target      = "root",
+    #key         = "root",
+    target_id = "r-h53v"
   },
-  {
-    name        = "deny-iam",
+  "deny-iam" = {
     description = "Control policies applicable to all accounts",
     filename    = "assets/service-control-policies/deny-infrastructure.json",
-    target      = "infrastructure",
+    #key         = "infrastructure",
+    target_id = "ou-h53v-hpdeb19n"
   },
-]
+}
 
 enable_aws_services = [
   "access-analyzer.amazonaws.com",
