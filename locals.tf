@@ -1,11 +1,14 @@
 locals {
   ## All member accounts in the organization which are active
   all_member_accounts = {
-    for x in aws_organization_account.organization.accounts :
+    for x in data.aws_organizations_organizational_unit_descendant_accounts.current.accounts :
     x.name => x.id if x.status == "ACTIVE"
   }
 
-  ## Build all the level 1 organizational units 
+  ## The root organizational unit
+  root_ou = aws_organizations_organization.organization.roots[0].id
+
+  ## Build all the level 1 organizational units
   level_1_ou_arguments = [
     for ou in var.organization.units :
     {
@@ -13,7 +16,7 @@ locals {
       key : ou.key,
     }
   ]
-  ## Build all the level 2 organizational units 
+  ## Build all the level 2 organizational units
   level_2_ou_arguments = flatten([
     for level_1_ou in var.organization.units :
     [
@@ -25,7 +28,7 @@ locals {
       }
     ]
   ])
-  ## Build all the level 3 organizational units 
+  ## Build all the level 3 organizational units
   level_3_ou_arguments = flatten([
     for level_1_ou in var.organization.units :
     [
@@ -40,7 +43,7 @@ locals {
       ]
     ]
   ])
-  ## Build all the level 4 organizational units 
+  ## Build all the level 4 organizational units
   level_4_ou_arguments = flatten([
     for level_1_ou in var.organization.units :
     [
@@ -58,7 +61,7 @@ locals {
       ]
     ]
   ])
-  ## Build all the level 5 organizational units 
+  ## Build all the level 5 organizational units
   level_5_ou_arguments = flatten([
     for level_1_ou in var.organization.units :
     [

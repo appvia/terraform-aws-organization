@@ -36,21 +36,23 @@ examples:
 
 documentation: 
 	@echo "--> Generating documentation"
-	@terraform-docs markdown table --output-file ${PWD}/README.md --output-mode inject .
+	@terraform-docs .
 	$(MAKE) documentation-modules
 	$(MAKE) documentation-examples
 
 documentation-modules:
 	@echo "--> Generating documentation for modules"
-	@if [ -d modules ]; then \
-		find modules -type d -mindepth 1 -maxdepth 1 -exec terraform-docs markdown table --output-file README.md --output-mode inject {} \; ; \
-	fi
+	@find . -type d -regex '.*/modules/[a-za-z\-_$$]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+		echo "--> Generating documentation for module: $$dir"; \
+		terraform-docs $$dir; \
+	done;
 
 documentation-examples:
-	@echo "--> Generating documentation examples"
-	@if [ -d examples ]; then \
-		find examples -type d -mindepth 1 -maxdepth 1 -exec terraform-docs markdown table --output-file README.md --output-mode inject {} \; ; \
-	fi
+	@echo "--> Generating documentation for examples"
+	@find . -type d -path '*/examples/*' -not -path '*.terraform*' 2>/dev/null| while read -r dir; do \
+		echo "--> Generating documentation for example: $$dir"; \
+		terraform-docs $$dir; \
+	done;
 
 upgrade-terraform-providers:
 	@printf "%s Upgrading Terraform providers for %-24s" "-->" "."
@@ -59,7 +61,7 @@ upgrade-terraform-providers:
 
 upgrade-terraform-example-providers:
 	@if [ -d examples ]; then \
-		find examples -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
+		find examples -type d -mindepth 1 -maxdepth 1 2>/dev/null | while read -r dir; do \
 			printf "%s Upgrading Terraform providers for %-24s" "-->" "$$dir"; \
 			terraform -chdir=$$dir init -upgrade >/dev/null && echo "[OK]" || echo "[FAILED]"; \
 		done; \
@@ -68,8 +70,12 @@ upgrade-terraform-example-providers:
 init: 
 	@echo "--> Running terraform init"
 	@terraform init -backend=false
+	@find . -type f -name "*.tf" -not -path '*.terraform*' -exec dirname {} \; | sort -u | while read -r dir; do \
+		echo "--> Running terraform init in $$dir"; \
+		terraform -chdir=$$dir init -backend=false; \
+	done;
 
-security: 
+security: init
 	@echo "--> Running Security checks"
 	@trivy config .
 	$(MAKE) security-modules
@@ -77,21 +83,19 @@ security:
 
 security-modules:
 	@echo "--> Running Security checks on modules"
-	@if [ -d modules ]; then \
-		find modules -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
-			echo "--> Validating $$dir"; \
-			trivy config  --format table --exit-code  1 --severity  CRITICAL,HIGH --ignorefile .trivyignore $$dir; \
-		done; \
-	fi
+	@find . -type d -regex '.*/modules/[a-zA-Z\-_$$]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+		echo "--> Validating $$dir"; \
+	  terraform init -backend=false; \
+		trivy config  --format table --exit-code  1 --severity  CRITICAL,HIGH --ignorefile .trivyignore $$dir; \
+	done; 
 
 security-examples:
 	@echo "--> Running Security checks on examples"
-	@if [ -d examples ]; then \
-		find examples -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
-			echo "--> Validating $$dir"; \
-			trivy config  --format table --exit-code  1 --severity  CRITICAL,HIGH --ignorefile .trivyignore $$dir; \
-		done; \
-	fi
+	@find . -type d -path '*/examples/*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+		echo "--> Validating $$dir"; \
+	  terraform init -backend=false; \
+		trivy config  --format table --exit-code  1 --severity  CRITICAL,HIGH --ignorefile .trivyignore $$dir; \
+	done;
 
 tests: 
 	@echo "--> Running Terraform Tests" 
@@ -107,23 +111,19 @@ validate:
 
 validate-modules:
 	@echo "--> Running terraform validate on modules"
-	@if [ -d modules ]; then \
-		find modules -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
-			echo "--> Validating $$dir"; \
-			terraform -chdir=$$dir init -backend=false; \
-			terraform -chdir=$$dir validate; \
-		done; \
-	fi
+	@find . -type d -regex '.*/modules/[a-zA-Z\-_$$]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+		echo "--> Validating Module $$dir"; \
+		terraform -chdir=$$dir init -backend=false; \
+		terraform -chdir=$$dir validate; \
+	done;
 
 validate-examples:
 	@echo "--> Running terraform validate on examples"
-	@if [ -d examples ]; then \
-		find examples -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
-			echo "--> Validating $$dir"; \
-			terraform -chdir=$$dir init -backend=false; \
-			terraform -chdir=$$dir validate; \
-		done; \
-	fi
+	@find . -type d -path '*/examples/*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+		echo "--> Validating $$dir"; \
+		terraform -chdir=$$dir init -backend=false; \
+		terraform -chdir=$$dir validate; \
+	done; 
 
 validate-commits:
 	@echo "--> Running commitlint against the main branch"
@@ -139,23 +139,19 @@ lint:
 
 lint-modules:
 	@echo "--> Running tflint on modules"
-	@if [ -d modules ]; then \
-		find modules -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
-			echo "--> Linting $$dir"; \
-			tflint --chdir=$$dir --init; \
-			tflint --chdir=$$dir -f compact; \
-		done; \
-	fi
+	@find . -type d -regex '.*/modules/[a-zA-Z\-_$$]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+		echo "--> Linting $$dir"; \
+		tflint --chdir=$$dir --init; \
+		tflint --chdir=$$dir -f compact; \
+	done;
 
 lint-examples:
 	@echo "--> Running tflint on examples"
-	@if [ -d examples ]; then \
-		find examples -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
-			echo "--> Linting $$dir"; \
-			tflint --chdir=$$dir --init; \
-			tflint --chdir=$$dir -f compact; \
-		done; \
-	fi
+	@find . -type d -path '*/examples/*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+		echo "--> Linting $$dir"; \
+		tflint --chdir=$$dir --init; \
+		tflint --chdir=$$dir -f compact; \
+	done; 
 
 format: 
 	@echo "--> Running terraform fmt"
@@ -163,7 +159,7 @@ format:
 
 clean:
 	@echo "--> Cleaning up"
-	@find . -type d -name ".terraform" | while read -r dir; do \
+	@find . -type d -name ".terraform" 2>/dev/null | while read -r dir; do \
 		echo "--> Removing $$dir"; \
 		rm -rf $$dir; \
 	done

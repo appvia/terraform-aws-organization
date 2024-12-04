@@ -13,7 +13,7 @@ locals {
     }
   ]
 
-  # Iterate and loop in the the content for the policies for backup 
+  # Iterate and loop in the the content for the policies for backup
   backup_policies = [
     for x in var.backup_policies : {
       name        = x.name
@@ -23,7 +23,7 @@ locals {
     }
   ]
 
-  # Iterate and loop in the the content for the policies for tagging_policies 
+  # Iterate and loop in the the content for the policies for tagging_policies
   tagging_policies = [
     for x in var.tagging_policies : {
       name        = x.name
@@ -40,6 +40,8 @@ module "organization" {
 
   backup_policies          = local.backup_policies
   enable_delegation        = var.enable_delegation
+  enable_policy_types      = var.enable_policy_types
+  organization             = var.organization
   service_control_policies = local.service_control_policies
   tagging_policies         = local.tagging_policies
   tags                     = var.tags

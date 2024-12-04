@@ -1,6 +1,4 @@
-#
-## Provision any service control policies 
-#
+## Provision any service control policies
 resource "aws_organizations_policy" "service_control_policy" {
   for_each = { for x in var.service_control_policies : x.name => x }
 
@@ -16,10 +14,10 @@ resource "aws_organizations_policy_attachment" "service_control_policy_attachmen
   for_each = { for x in var.service_control_policies : x.name => x if x.target == "root" }
 
   policy_id = aws_organizations_policy.service_control_policy[each.key].id
-  target_id = 
+  target_id = local.root_ou
 }
 
-## Attach any service control policies to the organization unit 
+## Attach any service control policies to the organization unit
 resource "aws_organizations_policy_attachment" "service_control_policy_attachment" {
   for_each = { for x in var.service_control_policies : x.name => x if x.target != "root" }
 
@@ -28,7 +26,7 @@ resource "aws_organizations_policy_attachment" "service_control_policy_attachmen
 }
 
 #
-## Provision any tagging policies 
+## Provision any tagging policies
 #
 resource "aws_organizations_policy" "tagging_policy" {
   for_each = { for x in var.tagging_policies : x.name => x }
@@ -40,7 +38,7 @@ resource "aws_organizations_policy" "tagging_policy" {
   type        = "TAG_POLICY"
 }
 
-## Attach any tagging policies to the organizational units 
+## Attach any tagging policies to the organizational units
 resource "aws_organizations_policy_attachment" "tagging_policy_attachment_root" {
   for_each = { for x in var.tagging_policies : x.name => x if x.target == "root" }
 
@@ -56,7 +54,7 @@ resource "aws_organizations_policy_attachment" "tagging_policy_attachment" {
 }
 
 #
-## Provision any backup policies 
+## Provision any backup policies
 #
 resource "aws_organizations_policy" "backup_policy" {
   for_each = { for x in var.backup_policies : x.name => x }
@@ -68,7 +66,7 @@ resource "aws_organizations_policy" "backup_policy" {
   type        = "BACKUP_POLICY"
 }
 
-## Attach any backup policies to the organizational root 
+## Attach any backup policies to the organizational root
 resource "aws_organizations_policy_attachment" "backup_policy_attachment_root" {
   for_each = { for x in var.backup_policies : x.name => x if x.target == "root" }
 
@@ -83,4 +81,3 @@ resource "aws_organizations_policy_attachment" "backup_policy_attachment" {
   policy_id = aws_organizations_policy.backup_policy[each.key].id
   target_id = local.all_ou_attributes[each.value.target].id
 }
-

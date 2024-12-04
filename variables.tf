@@ -4,7 +4,7 @@ variable "tags" {
   type        = map(string)
 }
 
-variable "organizational_units" {
+variable "organization" {
   description = "The organization with the tree of organizational units and accounts to construct. Defaults to an object with an empty list of units and accounts"
   type = object({
     units = optional(list(object({
@@ -85,6 +85,7 @@ variable "enable_aws_services" {
     "account.amazonaws.com",
     "cloudtrail.amazonaws.com",
     "compute-optimizer.amazonaws.com",
+    "config-multiaccountsetup.amazonaws.com",
     "config.amazonaws.com",
     "controltower.amazonaws.com",
     "cost-optimization-hub.bcm.amazonaws.com",
@@ -163,4 +164,12 @@ variable "enable_delegation" {
       account_name = string
     }), null)
   })
+  default = {
+    organizations = null
+    securityhub   = null
+    guardduty     = null
+    ipam          = null
+    macie         = null
+    inspection    = null
+  }
 }

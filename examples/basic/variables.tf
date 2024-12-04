@@ -68,7 +68,7 @@ variable "enable_policy_types" {
   ]
 }
 
-variable "organization_units" {
+variable "organization" {
   description = "The organization with the tree of organizational units"
   type = object({
     units = optional(list(object({

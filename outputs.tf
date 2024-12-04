@@ -9,19 +9,14 @@ output "organization_arn" {
   value       = aws_organizations_organization.organization.arn
 }
 
-output "master_account_arn" {
+output "master_account_id" {
   description = "The ARN of the master account provided by AWS"
-  value       = aws_organizations_organization.organization.master_account_arn
+  value       = aws_organizations_organization.organization.master_account_id
 }
 
 output "master_account_email" {
   description = "The email address of the master account provided by AWS"
   value       = aws_organizations_organization.organization.master_account_email
-}
-
-output "master_account_name" {
-  description = "The name of the master account provided by AWS"
-  value       = aws_organizations_organization.organization.master_account_name
 }
 
 output "organizational_units" {
