@@ -1,23 +1,187 @@
 ![Github Actions](../../actions/workflows/terraform.yml/badge.svg)
 
-# Terraform <NAME>
+# Terraform AWS Organization Module
 
 ## Description
 
-Add a description of the module here
+The purpose of this module is to create an AWS organization with a tree of organizational units and accounts. The module also provides the capability to enable AWS services, policy types, and delegation of services to other AWS accounts.
+
+### Organizational Units
+
+You can defined your organizational units in the `organization` input variable. The `organization` input variable is an object with a list of units and accounts. Each unit can have a list of sub-units. The `organization` input variable defaults to an object with an empty list of units and accounts. An example is provided below
+
+```hcl
+organization = {
+  units = [
+    {
+      name = "Infrastucture",
+      key  = "infrastructure",
+    },
+    {
+      name = "Workloads",
+      key  = "workloads",
+      units = [
+        {
+          name = "Development",
+          key  = "workloads/development",
+        },
+        {
+          name = "Production",
+          key  = "workloads/production",
+        },
+      ]
+    },
+    {
+      name = "Sandbox",
+      key  = "sandbox",
+    }
+  ]
+
+```
+
+### Organizational Features
+
+The `enable_aws_services` input variable is a list of AWS services to enable for the organization. The `enable_policy_types` input variable is a list of policy types to enable for the organization. The `enable_delegation` input variable provides the capability to delegate the management of a service to another AWS account. An example is provided below
+
+```hcl
+enable_aws_services = [
+  "access-analyzer.amazonaws.com",
+  "account.amazonaws.com",
+  "cloudtrail.amazonaws.com",
+  "compute-optimizer.amazonaws.com",
+  "config-multiaccountsetup.amazonaws.com",
+  "config.amazonaws.com",
+  "controltower.amazonaws.com",
+  "cost-optimization-hub.bcm.amazonaws.com",
+  "guardduty.amazonaws.com",
+  "ram.amazonaws.com",
+  "securityhub.amazonaws.com",
+  "servicequotas.amazonaws.com",
+  "sso.amazonaws.com",
+  "tagpolicies.tag.amazonaws.com"
+]
+
+enable_policy_types = [
+  "AISERVICES_OPT_OUT_POLICY",
+  "BACKUP_POLICY",
+  "SERVICE_CONTROL_POLICY",
+  "TAG_POLICY"
+]
+
+enable_delegation = {
+  organizations = {
+    account_name = "Audit"
+  }
+  securityhub = {
+    account_name = "Audit"
+  }
+  guardduty = {
+    account_name = "Audit"
+  }
+  ipam = {
+    account_name = "Network"
+  }
+  macie = {
+    account_name = "Audit"
+  }
+  inspection = {
+    account_name = "Audit"
+  }
+}
+```
+
+### Service Control Policies
+
+You can attach service control policies (SCPs) to the organization's root or to specific organizational units. The `service_control_policies` input variable is a map of SCPs to apply to the organization's root. The map key is the name of the SCP and the value is an object with the following attributes:
+
+- `description` - A description for the SCP
+- `content` - The content of the SCP
+- `key` - If we created the organizational unit, this is the key to attach the policy to
+- `target_id` - If the organizational unit already exists, this is the target ID to attach the policy to
+
+An example where is have created the organizational units below
+
+```
+organization = {
+  units = [
+    {
+      name = "Infrastucture",
+      key  = "infrastructure",
+    },
+    {
+      name = "Workloads",
+      key  = "workloads",
+      units = [
+        {
+          name = "Production",
+          key  = "workloads/production",
+        },
+      ]
+    }
+  ]
+}
+
+## Checkout the basic example for more details
+service_control_policies = {
+  "DenyAll" = {
+    description = "Deny all actions"
+    content     = file("${path.module}/policies/deny-all.json")
+    key         = "infrastructure"
+  }
+  "DenyProduction" = {
+    description = "Deny all actions in the infrastructure unit"
+    content     = file("${path.module}/policies/deny-infrastructure.json")
+    key         = "infrastructure/production"
+  }
+}
+```
+
+Alternatively if the organizational unit already exists, you can attach the SCP to the target ID. An example is provided below
+
+```
+service_control_policies = {
+  "DenyAll" = {
+    description = "Deny all actions"
+    content     = file("${path.module}/policies/deny-all.json")
+    target_id   = "ou-123456789012"
+  }
+}
+```
+
+### Backup Policies
+
+Backup policies can be attached to the organization's root or to specific organizational units. The `backup_policies` input variable is a map of backup policies to apply to the organization's root. The map key is the name of the backup policy and the value is an object with the following attributes:
+
+- `description` - A description for the backup policy
+- `content` - The content of the backup policy
+- `key` - If we created the organizational unit, this is the key to attach the policy to
+- `target_id` - If the organizational unit already exists, this is the target ID to attach the policy to
+
+An example where is have created the organizational units below
+
+```
+organization = {
+  units = [
+    {
+      name = "Infrastucture",
+      key  = "infrastructure",
+    }
+  ]
+}
+
+backup_policies = {
+  "BackupAll" = {
+    description = "Backup all resources"
+    content     = file("${path.module}/policies/backup-all.json")
+    key         = "infrastructure"
+    # target_id   = "ou-123456789012" # If the organizational unit already exists
+  }
+}
+```
 
 ## Usage
 
 Add example usage here
-
-```hcl
-module "example" {
-  source  = "appvia/<NAME>/aws"
-  version = "0.0.1"
-
-  # insert variables here
-}
-```
 
 ## Update Documentation
 
@@ -58,3 +222,7 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 | <a name="output_organizational_units"></a> [organizational\_units](#output\_organizational\_units) | The organizational units created in the organization |
 | <a name="output_organizational_units_map"></a> [organizational\_units\_map](#output\_organizational\_units\_map) | The organizational units created in the organization as a map |
 <!-- END_TF_DOCS -->
+
+```
+
+```
