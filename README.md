@@ -220,7 +220,6 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 | <a name="output_organization_arn"></a> [organization\_arn](#output\_organization\_arn) | The ARN of the organization provided by AWS |
 | <a name="output_organization_id"></a> [organization\_id](#output\_organization\_id) | The ID of the organization provided by AWS |
 | <a name="output_organizational_units"></a> [organizational\_units](#output\_organizational\_units) | The organizational units created in the organization |
-| <a name="output_organizational_units_map"></a> [organizational\_units\_map](#output\_organizational\_units\_map) | The organizational units created in the organization as a map |
 <!-- END_TF_DOCS -->
 
 ```
