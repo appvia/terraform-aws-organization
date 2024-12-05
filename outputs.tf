@@ -23,8 +23,3 @@ output "organizational_units" {
   description = "The organizational units created in the organization"
   value       = local.all_ou_attributes
 }
-
-output "organizational_units_map" {
-  description = "The organizational units created in the organization as a map"
-  value       = data.aws_organizations_organizational_units.current.children
-}

@@ -15,6 +15,12 @@ variable "tagging_policies" {
   default = {}
 }
 
+variable "enable_aws_services" {
+  description = "The list of AWS services to enable in the organization."
+  type        = list(string)
+  default     = []
+}
+
 variable "backup_policies" {
   description = "A list of backup policies to apply to the organization's root."
   type = map(object({

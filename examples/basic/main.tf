@@ -38,11 +38,12 @@ locals {
 module "organization" {
   source = "../.."
 
-  #backup_policies          = local.backup_policies
-  #enable_delegation        = var.enable_delegation
-  #enable_policy_types      = var.enable_policy_types
+  backup_policies     = local.backup_policies
+  enable_aws_services = var.enable_aws_services
+  enable_delegation   = var.enable_delegation
+  enable_policy_types = var.enable_policy_types
   #organization             = var.organization
-  service_control_policies = local.service_control_policies
-  #tagging_policies         = local.tagging_policies
-  tags = var.tags
+  #service_control_policies = local.service_control_policies
+  tagging_policies = local.tagging_policies
+  tags             = var.tags
 }

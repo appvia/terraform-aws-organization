@@ -27,12 +27,14 @@ enable_aws_services = [
   "securityhub.amazonaws.com",
   "servicequotas.amazonaws.com",
   "sso.amazonaws.com",
+  "member.org.stacksets.cloudformation.amazonaws.com",
   "tagpolicies.tag.amazonaws.com",
 ]
 
 tags = {
-  "Environment" = "Development",
-  "Owner"       = "DevOps",
+  "Environment" = "Production",
+  "Owner"       = "Engineering",
+  "Product"     = "LandingZone"
 }
 
 enable_delegation = {
