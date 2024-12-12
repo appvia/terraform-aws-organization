@@ -14,6 +14,27 @@ run "basic" {
       guardduty = {
         account_name = "Audit",
       },
+      firewall_manager = {
+        account_name = "Audit",
+      },
+      detective = {
+        account_name = "Audit",
+      },
+      organizations = {
+        account_name = "Audit",
+      },
+      macie = {
+        account_name = "Audit",
+      },
+      ipam = {
+        account_name = "Audit",
+      },
+      inspector = {
+        account_name = "Audit",
+      },
+      audit_manager = {
+        account_name = "Audit",
+      },
     }
 
     tags = {

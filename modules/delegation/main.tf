@@ -1,10 +1,31 @@
 
+## Delegate the audit manager service
+resource "aws_auditmanager_organization_admin_account_registration" "audit_manager" {
+  count = var.enable_delegation.audit_manager != null ? 1 : 0
+
+  admin_account_id = local.all_member_accounts[var.enable_delegation.audit_manager.account_name].id
+}
+
 ## Delegate the organization to the account
 resource "aws_organizations_delegated_administrator" "delegated_administrator" {
   count = var.enable_delegation.organizations != null ? 1 : 0
 
   account_id        = local.all_member_accounts[var.enable_delegation.organizations.account_name].id
   service_principal = "principal"
+}
+
+## Delegate the detective service to the account
+resource "aws_detective_organization_admin_account" "detective_organization_admin_account" {
+  count = var.enable_delegation.detective != null ? 1 : 0
+
+  account_id = local.all_member_accounts[var.enable_delegation.detective.account_name].id
+}
+
+## Delete the firewall manager to the account
+resource "aws_fms_admin_account" "fms_admin_account" {
+  count = var.enable_delegation.firewall_manager != null ? 1 : 0
+
+  account_id = local.all_member_accounts[var.enable_delegation.firewall_manager.account_name].id
 }
 
 ## Delegate the guardduty to the account
@@ -43,7 +64,7 @@ resource "aws_vpc_ipam_organization_admin_account" "ipam_organization_admin_acco
 
 ## Delegate the inspection to the account_name
 resource "aws_inspector2_delegated_admin_account" "inspection_organization_admin_account" {
-  count = var.enable_delegation.inspection != null ? 1 : 0
+  count = var.enable_delegation.inspector != null ? 1 : 0
 
-  account_id = local.all_member_accounts[var.enable_delegation.inspection.account_name].id
+  account_id = local.all_member_accounts[var.enable_delegation.inspector.account_name].id
 }

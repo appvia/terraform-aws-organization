@@ -7,11 +7,23 @@ variable "tags" {
 variable "enable_delegation" {
   description = "Provides at the capability to delegate the management of a service to another AWS account."
   type = object({
+    audit_manager = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of Audit Manager to
+    }), null)
+    detective = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of Detective to
+    }), null)
+    firewall_manager = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of Firewall Manager to
+    }), null)
     guardduty = optional(object({
       account_name = string
       # The name of the account to delegate the management of GuardDuty to
     }), null)
-    inspection = optional(object({
+    inspector = optional(object({
       account_name = string
       # The name of the account to delegate the management of Inspector to
     }), null)
@@ -33,11 +45,14 @@ variable "enable_delegation" {
     }), null)
   })
   default = {
-    guardduty     = null
-    inspection    = null
-    ipam          = null
-    macie         = null
-    organizations = null
-    securityhub   = null
+    audit_manager    = null
+    detective        = null
+    firewall_manager = null
+    guardduty        = null
+    inspector        = null
+    ipam             = null
+    macie            = null
+    organizations    = null
+    securityhub      = null
   }
 }
