@@ -179,10 +179,6 @@ backup_policies = {
 }
 ```
 
-## Usage
-
-Add example usage here
-
 ## Update Documentation
 
 The `terraform-docs` utility is used to generate this README. Follow the below steps to update:
