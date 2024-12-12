@@ -32,6 +32,12 @@ variable "organization" {
   default = {}
 }
 
+variable "enable_guardduty" {
+  description = "A boolean flag to enable GuardDuty within the management account."
+  type        = bool
+  default     = true
+}
+
 variable "enable_aws_services" {
   description = "A list of AWS services to enable for the organization."
   type        = list(string)
