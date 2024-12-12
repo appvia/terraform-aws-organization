@@ -40,13 +40,3 @@ resource "aws_organizations_organizational_unit" "level_5_ous" {
   name      = each.value.name
   parent_id = aws_organizations_organizational_unit.level_4_ous[each.value.parent].id
 }
-
-## Enable Guarduty within the management account
-resource "aws_guardduty_detector" "guarduty" {
-  count = var.enable_guardduty ? 1 : 0
-
-  enable                       = true
-  finding_publishing_frequency = "FIFTEEN_MINUTES"
-  tags                         = var.tags
-}
-

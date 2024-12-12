@@ -37,15 +37,6 @@ tags = {
   "Product"     = "LandingZone"
 }
 
-enable_delegation = {
-  securityhub = {
-    account_name = "Audit",
-  },
-  guardduty = {
-    account_name = "Audit",
-  },
-}
-
 organization = {
   units = [
     {

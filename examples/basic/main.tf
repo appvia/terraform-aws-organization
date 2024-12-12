@@ -34,13 +34,41 @@ locals {
   }
 }
 
+module "organization_eu_west_2" {
+  source = "../../modules/delegation"
+
+  enable_delegation = {
+    guardduty = {
+      account_name = "Audit",
+    },
+    securityhub = {
+      account_name = "Audit",
+    },
+  }
+  tags = var.tags
+}
+
+module "organization_us_east_1" {
+  source = "../../modules/delegation"
+
+  enable_delegation = {
+    guardduty = {
+      account_name = "Audit",
+    },
+  }
+  tags = var.tags
+
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
 ## Provision the organization, policies and structure
 module "organization" {
   source = "../.."
 
   backup_policies     = local.backup_policies
   enable_aws_services = var.enable_aws_services
-  enable_delegation   = var.enable_delegation
   enable_policy_types = var.enable_policy_types
   #organization             = var.organization
   #service_control_policies = local.service_control_policies
