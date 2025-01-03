@@ -179,6 +179,41 @@ backup_policies = {
 }
 ```
 
+### Service Quotas
+
+Service quotas can be applied to the organization. The `service_quotas` input variable is a collection of service quotas to apply to the organization. The collection is a list of objects with the following attributes:
+
+- `service_code` - The service code of the service quota
+- `quota_code` - The quota code of the service quota
+- `value` - The value of the service quota
+
+An example is provided below
+
+```hcl
+service_quotas = [
+  {
+    service_code = "ec2"
+    quota_code   = "L-1216C47A"
+    value        = 100
+  }
+]
+```
+
+Since AWS Service Quotas are not regional and only accessible from `us-east-1`, a `aws.us-east-1` provider must be defined and passed to the module. This is required regardless of whether you define any service quotas, as providers cannot be optional.
+
+```hcl
+provider "aws" {
+  region = "us-east-1"
+}
+
+module "organization" {
+  providers = {
+    aws           = aws
+    aws.us-east-1 = aws.us-east-1
+  }
+}
+```
+
 ## Update Documentation
 
 The `terraform-docs` utility is used to generate this README. Follow the below steps to update:
@@ -193,6 +228,7 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0.0 |
+| <a name="provider_aws.us-east-1"></a> [aws.us-east-1](#provider\_aws.us-east-1) | >= 5.0.0 |
 
 ## Inputs
 
@@ -205,6 +241,7 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 | <a name="input_enable_policy_types"></a> [enable\_policy\_types](#input\_enable\_policy\_types) | A list of policy types to enable for the organization. | `list(string)` | <pre>[<br/>  "AISERVICES_OPT_OUT_POLICY",<br/>  "BACKUP_POLICY",<br/>  "RESOURCE_CONTROL_POLICY",<br/>  "SERVICE_CONTROL_POLICY",<br/>  "TAG_POLICY"<br/>]</pre> | no |
 | <a name="input_organization"></a> [organization](#input\_organization) | The organization with the tree of organizational units and accounts to construct. Defaults to an object with an empty list of units and accounts | <pre>object({<br/>    units = optional(list(object({<br/>      name = string,<br/>      key  = string,<br/>      units = optional(list(object({<br/>        name = string,<br/>        key  = string,<br/>        units = optional(list(object({<br/>          name = string,<br/>          key  = string,<br/>          units = optional(list(object({<br/>            name = string,<br/>            key  = string,<br/>            units = optional(list(object({<br/>              name = string,<br/>              key  = string,<br/>            })), [])<br/>          })), [])<br/>        })), [])<br/>      })), [])<br/>    })), [])<br/>  })</pre> | `{}` | no |
 | <a name="input_service_control_policies"></a> [service\_control\_policies](#input\_service\_control\_policies) | A map of service control policies (SCPs) to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the service control policy<br/>    content = string<br/>    # The content of the service control policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |
+| <a name="input_service_quotas"></a> [service\_quotas](#input\_service\_quotas) | A collection of service quotas to apply to the organization. | <pre>list(object({<br/>    service_code = string<br/>    # The service code of the service quota<br/>    quota_code = string<br/>    # The quota code of the service quota<br/>    value = number<br/>    # The value of the service quota<br/>  }))</pre> | `[]` | no |
 | <a name="input_tagging_policies"></a> [tagging\_policies](#input\_tagging\_policies) | A map of tagging policies to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the tagging policy<br/>    content = string<br/>    # The content of the tagging policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |
 
 ## Outputs

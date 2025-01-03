@@ -73,3 +73,7 @@ mock_provider "aws" {
     }
   }
 }
+
+mock_provider "aws" {
+  alias = "us-east-1"
+}
