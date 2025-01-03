@@ -22,7 +22,11 @@ resource "aws_organizations_policy_attachment" "service_control_policy_attachmen
   for_each = { for k, v in var.service_control_policies : k => v if v.key != "root" }
 
   policy_id = aws_organizations_policy.service_control_policy[each.key].id
-  target_id = coalesce(each.value.target_id, try(local.all_ou_attributes[each.value.key].id, null))
+  target_id = coalesce(
+    try(each.value.target_id, null),
+    try(local.all_ou_attributes[each.value.key].id, null),
+    try(local.current_units[each.value.key], null),
+  )
 }
 
 #

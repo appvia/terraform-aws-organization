@@ -11,6 +11,11 @@ locals {
     } if x.status == "ACTIVE"
   }
 
+  ## Build of a map of all the organizational units from the data lookup
+  current_units = {
+    for ou in data.aws_organizations_organizational_units.current.children : lower(ou.name) => ou.id
+  }
+
   ## The root organizational unit
   root_ou = aws_organizations_organization.organization.roots[0].id
 
