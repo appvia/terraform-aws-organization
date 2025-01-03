@@ -14,6 +14,15 @@ resource "aws_organizations_delegated_administrator" "access_analyzer_administra
   service_principal = "access-analyzer.amazonaws.com"
 }
 
+## Provision the service linked role when access analyzer is enabled
+resource "aws_iam_service_linked_role" "access_analyzer" {
+  count = var.enable_delegation.access_analyzer != null ? 1 : 0
+
+  aws_service_name = "access-analyzer.amazonaws.com"
+  description      = "Service-Linked Role for Access Analyzer, used by the landing zone"
+  tags             = var.tags
+}
+
 ## Delegate the cloudformation stacksets to the account
 resource "aws_organizations_delegated_administrator" "stacksets_administrator" {
   count = var.enable_delegation.stacksets != null ? 1 : 0

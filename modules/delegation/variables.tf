@@ -1,4 +1,9 @@
 
+variable "tags" {
+  description = "A map of tags to resources provisioned by this module."
+  type        = map(string)
+}
+
 variable "enable_delegation" {
   description = "Provides at the capability to delegate the management of a service to another AWS account."
   type = object({
