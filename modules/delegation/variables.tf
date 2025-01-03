@@ -2,6 +2,10 @@
 variable "enable_delegation" {
   description = "Provides at the capability to delegate the management of a service to another AWS account."
   type = object({
+    access_analyzer = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of Access Analyzer to
+    }), null)
     audit_manager = optional(object({
       account_name = string
       # The name of the account to delegate the management of Audit Manager to
@@ -38,8 +42,13 @@ variable "enable_delegation" {
       account_name = string
       # The name of the account to delegate the management of Security Hub to
     }), null)
+    stacksets = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of StackSets to
+    }), null)
   })
   default = {
+    access_analyzer  = null
     audit_manager    = null
     detective        = null
     firewall_manager = null
@@ -49,5 +58,6 @@ variable "enable_delegation" {
     macie            = null
     organizations    = null
     securityhub      = null
+    stacksets        = null
   }
 }

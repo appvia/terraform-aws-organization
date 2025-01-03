@@ -6,6 +6,22 @@ resource "aws_auditmanager_organization_admin_account_registration" "audit_manag
   admin_account_id = local.all_member_accounts[var.enable_delegation.audit_manager.account_name].id
 }
 
+## Delegate the access analyzer to the account
+resource "aws_organizations_delegated_administrator" "access_analyzer_administrator" {
+  count = var.enable_delegation.access_analyzer != null ? 1 : 0
+
+  account_id        = local.all_member_accounts[var.enable_delegation.access_analyzer.account_name].id
+  service_principal = "access-analyzer.amazonaws.com"
+}
+
+## Delegate the cloudformation stacksets to the account
+resource "aws_organizations_delegated_administrator" "stacksets_administrator" {
+  count = var.enable_delegation.stacksets != null ? 1 : 0
+
+  account_id        = local.all_member_accounts[var.enable_delegation.stacksets.account_name].id
+  service_principal = "member.org.stacksets.cloudformation.amazonaws.com"
+}
+
 ## Delegate the organization to the account
 resource "aws_organizations_delegated_administrator" "delegated_administrator" {
   count = var.enable_delegation.organizations != null ? 1 : 0
