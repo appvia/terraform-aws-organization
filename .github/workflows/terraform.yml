@@ -13,8 +13,14 @@ permissions:
   pull-requests: write
 
 jobs:
-  module-validation:
+  validate-organization:
     uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@main
-    name: Module Validation
+    name: Organization Module Validation
     with:
-      working-directory: .
+      working-directory: examples/basic
+
+  validate-delegation:
+    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@main
+    name: Delegation Module Validation
+    with:
+      working-directory: modules/delegation
