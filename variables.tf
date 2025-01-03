@@ -126,17 +126,17 @@ variable "service_control_policies" {
 variable "enable_delegation" {
   description = "Provides at the capability to delegate the management of a service to another AWS account."
   type = object({
-    organizations = optional(object({
+    access_analyzer = optional(object({
       account_name = string
-      # The name of the account to delegate the management of Organizations to
-    }), null)
-    securityhub = optional(object({
-      account_name = string
-      # The name of the account to delegate the management of Security Hub to
+      # The name of the account to delegate the management of Access Analyzer to
     }), null)
     guardduty = optional(object({
       account_name = string
       # The name of the account to delegate the management of GuardDuty to
+    }), null)
+    inspection = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of Inspector to
     }), null)
     ipam = optional(object({
       account_name = string
@@ -146,17 +146,27 @@ variable "enable_delegation" {
       account_name = string
       # The name of the account to delegate the management of Macie to
     }), null)
-    inspection = optional(object({
+    organizations = optional(object({
       account_name = string
-      # The name of the account to delegate the management of Inspector to
+      # The name of the account to delegate the management of Organizations to
+    }), null)
+    securityhub = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of Security Hub to
+    }), null)
+    stacksets = optional(object({
+      account_name = string
+      # The name of the account to delegate the management of StackSets to
     }), null)
   })
   default = {
-    organizations = null
-    securityhub   = null
-    guardduty     = null
-    ipam          = null
-    macie         = null
-    inspection    = null
+    access_analyzer = null
+    guardduty       = null
+    inspection      = null
+    ipam            = null
+    macie           = null
+    organizations   = null
+    securityhub     = null
+    stacksets       = null
   }
 }

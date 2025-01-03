@@ -36,11 +36,6 @@ run "basic" {
         account_name = "Audit",
       },
     }
-
-    tags = {
-      "Environment" = "Development",
-      "Owner"       = "DevOps",
-    }
   }
 }
 

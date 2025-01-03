@@ -4,7 +4,23 @@ resource "aws_organizations_delegated_administrator" "delegated_administrator" {
   count = var.enable_delegation.organizations != null ? 1 : 0
 
   account_id        = local.all_member_accounts[var.enable_delegation.organizations.account_name].id
-  service_principal = "principal"
+  service_principal = "organizations.amazonaws.com"
+}
+
+## Delegate the cloudformation stacksets to the account
+resource "aws_organizations_delegated_administrator" "stacksets_administrator" {
+  count = var.enable_delegation.stacksets != null ? 1 : 0
+
+  account_id        = local.all_member_accounts[var.enable_delegation.stacksets.account_name].id
+  service_principal = "member.org.stacksets.cloudformation.amazonaws.com"
+}
+
+## Delegate the access analyzer to the account
+resource "aws_organizations_delegated_administrator" "access_analyzer_administrator" {
+  count = var.enable_delegation.access_analyzer != null ? 1 : 0
+
+  account_id        = local.all_member_accounts[var.enable_delegation.access_analyzer.account_name].id
+  service_principal = "access-analyzer.amazonaws.com"
 }
 
 ## Delegate the guardduty to the account

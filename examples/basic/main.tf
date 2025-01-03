@@ -38,13 +38,13 @@ locals {
 module "organization" {
   source = "../.."
 
-  backup_policies     = local.backup_policies
-  enable_aws_services = var.enable_aws_services
-  enable_policy_types = var.enable_policy_types
-  #organization             = var.organization
-  #service_control_policies = local.service_control_policies
-  tagging_policies = local.tagging_policies
-  tags             = var.tags
+  backup_policies          = local.backup_policies
+  enable_aws_services      = var.enable_aws_services
+  enable_policy_types      = var.enable_policy_types
+  organization             = var.organization
+  service_control_policies = local.service_control_policies
+  tagging_policies         = local.tagging_policies
+  tags                     = var.tags
 
   service_quotas = [
     {
@@ -76,7 +76,6 @@ module "organization_eu_west_2" {
       account_name = "Audit",
     },
   }
-  tags = var.tags
 }
 
 module "organization_us_east_1" {
@@ -87,7 +86,6 @@ module "organization_us_east_1" {
       account_name = "Audit",
     },
   }
-  tags = var.tags
 
   providers = {
     aws = aws.us_east_1
