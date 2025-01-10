@@ -7,6 +7,10 @@ run "basic" {
   }
 
   variables {
+    tags = {
+      Environment = "Production"
+    }
+
     enable_delegation = {
       securityhub = {
         account_name = "Audit",
