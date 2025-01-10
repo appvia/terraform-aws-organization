@@ -76,6 +76,7 @@ module "organization_eu_west_2" {
       account_name = "Audit",
     },
   }
+  tags = var.tags
 }
 
 module "organization_us_east_1" {
@@ -86,6 +87,7 @@ module "organization_us_east_1" {
       account_name = "Audit",
     },
   }
+  tags = var.tags
 
   providers = {
     aws = aws.us_east_1
