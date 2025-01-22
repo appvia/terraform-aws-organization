@@ -1,0 +1,10 @@
+{
+  "tags": {
+    "mandatory": ["Environment", "Owner", "Project"],
+    "allowed": {
+      "Environment": ["dev", "test", "prod"],
+      "Owner": "^[a-zA-Z]+$",
+      "Project": "^[a-zA-Z0-9-_]+$"
+    }
+  }
+}

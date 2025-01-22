@@ -33,7 +33,7 @@ resource "aws_organizations_policy_attachment" "service_control_policy_attachmen
 ## Provision any tagging policies
 #
 resource "aws_organizations_policy" "tagging_policy" {
-  for_each = { for x in var.tagging_policies : x.name => x }
+  for_each = var.tagging_policies
 
   name        = each.key
   content     = each.value.content
@@ -44,14 +44,14 @@ resource "aws_organizations_policy" "tagging_policy" {
 
 ## Attach any tagging policies to the organizational units
 resource "aws_organizations_policy_attachment" "tagging_policy_attachment_root" {
-  for_each = { for x in var.tagging_policies : x.name => x if x.key == "root" }
+  for_each = { for k, v in var.tagging_policies : k => v if v.key == "root" }
 
   policy_id = aws_organizations_policy.tagging_policy[each.key].id
   target_id = local.root_ou
 }
 
 resource "aws_organizations_policy_attachment" "tagging_policy_attachment" {
-  for_each = { for x in var.tagging_policies : x.name => x if x.key != "root" }
+  for_each = { for k, v in var.tagging_policies : k => v if v.key != "root" }
 
   policy_id = aws_organizations_policy.tagging_policy[each.key].id
   target_id = coalesce(each.value.target_id, try(local.all_ou_attributes[each.value.key].id, null))

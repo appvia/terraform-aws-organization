@@ -1,0 +1,9 @@
+{
+    "tags": {
+      "mandatory": ["CostCenter", "BillingCode"],
+      "allowed": {
+        "CostCenter": "^CC-[0-9]{4}$",
+        "BillingCode": "^BC-[0-9]{3}$"
+      }
+    }
+  }

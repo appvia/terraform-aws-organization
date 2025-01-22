@@ -83,3 +83,17 @@ organization = {
     }
   ]
 }
+
+tagging_policies = {
+  "MandatoryTaggingPolicy" = {
+    description = "Enforces mandatory tags like Environment, Owner, and Project."
+    filename    = "assets/tagging-policies/mandatory-tagging-policy.json"
+    key         = "infrastructure"
+  }
+
+  "CostTaggingPolicy" = {
+    description = "Ensures resources are tagged with cost-related metadata."
+    filename    = "assets/tagging-policies/cost-tagging-policy.json"
+    key         = "workloads"
+  }
+}
