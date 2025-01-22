@@ -33,7 +33,7 @@ resource "aws_organizations_policy_attachment" "service_control_policy_attachmen
 ## Provision any tagging policies
 #
 resource "aws_organizations_policy" "tagging_policy" {
-  for_each = { for k, v in var.tagging_policies : k => v }
+  for_each = var.tagging_policies
 
   name        = each.key
   content     = each.value.content
