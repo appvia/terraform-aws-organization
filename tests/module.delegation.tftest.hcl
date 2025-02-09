@@ -13,31 +13,31 @@ run "basic" {
 
     enable_delegation = {
       securityhub = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       guardduty = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       firewall_manager = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       detective = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       organizations = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       macie = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       ipam = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       inspector = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
       audit_manager = {
-        account_name = "Audit",
+        account_id = "123456789012",
       },
     }
   }
