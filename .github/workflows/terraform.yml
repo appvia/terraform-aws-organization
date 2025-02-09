@@ -24,3 +24,9 @@ jobs:
     name: Delegation Module Validation
     with:
       working-directory: modules/delegation
+
+  validate-delegation:
+    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@main
+    name: Service Quotas Module Validation
+    with:
+      working-directory: modules/service_quotas

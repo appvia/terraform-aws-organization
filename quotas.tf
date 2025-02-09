@@ -1,6 +1,3 @@
-#
-## Related to the service quotas
-#
 
 #
 # To find the service quotas for the AWS services, you can use the AWS CLI:

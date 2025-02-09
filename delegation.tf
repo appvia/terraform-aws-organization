@@ -3,7 +3,7 @@
 resource "aws_organizations_delegated_administrator" "delegated_administrator" {
   count = var.enable_delegation.organizations != null ? 1 : 0
 
-  account_id        = local.all_member_accounts[var.enable_delegation.organizations.account_name].id
+  account_id        = var.enable_delegation.organizations.account_id
   service_principal = "organizations.amazonaws.com"
 }
 
@@ -11,7 +11,7 @@ resource "aws_organizations_delegated_administrator" "delegated_administrator" {
 resource "aws_organizations_delegated_administrator" "stacksets_administrator" {
   count = var.enable_delegation.stacksets != null ? 1 : 0
 
-  account_id        = local.all_member_accounts[var.enable_delegation.stacksets.account_name].id
+  account_id        = var.enable_delegation.stacksets.account_id
   service_principal = "member.org.stacksets.cloudformation.amazonaws.com"
 }
 
@@ -19,7 +19,7 @@ resource "aws_organizations_delegated_administrator" "stacksets_administrator" {
 resource "aws_organizations_delegated_administrator" "access_analyzer_administrator" {
   count = var.enable_delegation.access_analyzer != null ? 1 : 0
 
-  account_id        = local.all_member_accounts[var.enable_delegation.access_analyzer.account_name].id
+  account_id        = var.enable_delegation.access_analyzer.account_id
   service_principal = "access-analyzer.amazonaws.com"
 }
 
@@ -36,7 +36,7 @@ resource "aws_iam_service_linked_role" "access_analyzer" {
 resource "aws_guardduty_organization_admin_account" "guardduty_organization_admin_account" {
   count = var.enable_delegation.guardduty != null ? 1 : 0
 
-  admin_account_id = local.all_member_accounts[var.enable_delegation.guardduty.account_name].id
+  admin_account_id = var.enable_delegation.guardduty.account_id
 }
 
 ## Delegate the macie to the account
@@ -48,7 +48,7 @@ resource "aws_macie2_account" "macie" {
 resource "aws_macie2_organization_admin_account" "macie_organization_admin_account" {
   count = var.enable_delegation.macie != null ? 1 : 0
 
-  admin_account_id = local.all_member_accounts[var.enable_delegation.macie.account_name].id
+  admin_account_id = var.enable_delegation.macie.account_id
   depends_on       = [aws_macie2_account.macie]
 }
 
@@ -56,19 +56,19 @@ resource "aws_macie2_organization_admin_account" "macie_organization_admin_accou
 resource "aws_securityhub_organization_admin_account" "securityhub_organization_admin_account" {
   count = var.enable_delegation.securityhub != null ? 1 : 0
 
-  admin_account_id = local.all_member_accounts[var.enable_delegation.securityhub.account_name].id
+  admin_account_id = var.enable_delegation.securityhub.account_id
 }
 
 ## Delegate the IPAM to the account
 resource "aws_vpc_ipam_organization_admin_account" "ipam_organization_admin_account" {
   count = var.enable_delegation.ipam != null ? 1 : 0
 
-  delegated_admin_account_id = local.all_member_accounts[var.enable_delegation.ipam.account_name].id
+  delegated_admin_account_id = var.enable_delegation.ipam.account_id
 }
 
 ## Delegate the inspection to the account_name
 resource "aws_inspector2_delegated_admin_account" "inspection_organization_admin_account" {
   count = var.enable_delegation.inspection != null ? 1 : 0
 
-  account_id = local.all_member_accounts[var.enable_delegation.inspection.account_name].id
+  account_id = var.enable_delegation.inspection.account_id
 }
