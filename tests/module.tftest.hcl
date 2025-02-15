@@ -18,19 +18,6 @@ run "basic" {
       "tagpolicies.tag.amazonaws.com",
     ]
 
-    service_quotas = [
-      {
-        quota_code   = "L-F678F1CE"
-        service_code = "guardduty"
-        value        = 10
-      },
-      {
-        quota_code   = "L-F678F1CE"
-        service_code = "securityhub"
-        value        = 10
-      },
-    ]
-
     organization = {
       units = [
         {

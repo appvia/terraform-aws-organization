@@ -1,13 +1,4 @@
 locals {
-  ## Build a map of the service quotas
-  service_quotas = {
-    for quota in var.service_quotas : "${quota.service_code}-${quota.quota_code}" => {
-      service_code = quota.service_code
-      quota_code   = quota.quota_code
-      value        = quota.value
-    }
-  }
-
   ## Build of a map of all the organizational units from the data lookup
   current_units = {
     for ou in data.aws_organizations_organizational_units.current.children : lower(ou.name) => ou.id

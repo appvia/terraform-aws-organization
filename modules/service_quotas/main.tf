@@ -11,6 +11,4 @@ resource "aws_servicequotas_service_quota" "service_quotas" {
   service_code = each.value.service_code
   quota_code   = each.value.quota_code
   value        = each.value.value
-
-  provider = aws.us-east-1
 }

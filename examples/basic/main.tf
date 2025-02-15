@@ -3,6 +3,9 @@
 #
 
 locals {
+  ## Account id for audit account
+  audit_account_id = "123456789012"
+
   # Iterate and loop in the the content for the policies
   service_control_policies = {
     for k, x in var.service_control_policies : k => {
@@ -46,22 +49,8 @@ module "organization" {
   tagging_policies         = local.tagging_policies
   tags                     = var.tags
 
-  service_quotas = [
-    {
-      quota_code   = "L-F678F1CE"
-      service_code = "guardduty"
-      value        = 10
-    },
-    {
-      quota_code   = "L-F678F1CE"
-      service_code = "securityhub"
-      value        = 10
-    },
-  ]
-
   providers = {
-    aws           = aws
-    aws.us-east-1 = aws.us_east_1
+    aws = aws
   }
 }
 
@@ -70,10 +59,10 @@ module "organization_eu_west_2" {
 
   enable_delegation = {
     guardduty = {
-      account_name = "Audit",
+      account_id = local.audit_account_id,
     },
     securityhub = {
-      account_name = "Audit",
+      account_id = local.audit_account_id,
     },
   }
   tags = var.tags
@@ -84,7 +73,7 @@ module "organization_us_east_1" {
 
   enable_delegation = {
     guardduty = {
-      account_name = "Audit",
+      account_id = local.audit_account_id,
     },
   }
   tags = var.tags
