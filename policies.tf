@@ -122,3 +122,64 @@ resource "aws_organizations_policy_attachment" "resource_control_policy_attachme
   policy_id = aws_organizations_policy.resource_control_policy[each.key].id
   target_id = local.root_ou
 }
+
+## Attach any resource control policies to the organizational units
+resource "aws_organizations_policy_attachment" "resource_control_policy_attachment" {
+  for_each = { for k, v in var.resource_control_policies : k => v if v.key != "root" }
+
+  policy_id = aws_organizations_policy.resource_control_policy[each.key].id
+  target_id = coalesce(
+    try(each.value.target_id, null),
+    try(local.all_ou_attributes[each.value.key].id, null),
+    try(local.current_units[each.value.key], null),
+  )
+
+  depends_on = [
+    aws_organizations_organizational_unit.level_1_ous,
+    aws_organizations_organizational_unit.level_2_ous,
+    aws_organizations_organizational_unit.level_3_ous,
+    aws_organizations_organizational_unit.level_4_ous,
+    aws_organizations_organizational_unit.level_5_ous
+  ]
+}
+
+#
+## Provision any AI opt-out policies
+#
+resource "aws_organizations_policy" "ai_opt_out_policy" {
+  for_each = var.ai_opt_out_policy
+
+  name        = each.key
+  content     = each.value.content
+  description = each.value.description
+  tags        = var.tags
+  type        = "AISERVICES_OPT_OUT_POLICY"
+}
+
+## Attach any AI opt-out policies to the organizational root
+resource "aws_organizations_policy_attachment" "ai_opt_out_policy_attachment_root" {
+  for_each = { for k, v in var.ai_opt_out_policy : k => v if v.key == "root" }
+
+  policy_id = aws_organizations_policy.ai_opt_out_policy[each.key].id
+  target_id = local.root_ou
+}
+
+## Attach any AI opt-out policies to the organizational units
+resource "aws_organizations_policy_attachment" "ai_opt_out_policy_attachment" {
+  for_each = { for k, v in var.ai_opt_out_policy : k => v if v.key != "root" }
+
+  policy_id = aws_organizations_policy.ai_opt_out_policy[each.key].id
+  target_id = coalesce(
+    try(each.value.target_id, null),
+    try(local.all_ou_attributes[each.value.key].id, null),
+    try(local.current_units[each.value.key], null),
+  )
+
+  depends_on = [
+    aws_organizations_organizational_unit.level_1_ous,
+    aws_organizations_organizational_unit.level_2_ous,
+    aws_organizations_organizational_unit.level_3_ous,
+    aws_organizations_organizational_unit.level_4_ous,
+    aws_organizations_organizational_unit.level_5_ous
+  ]
+}

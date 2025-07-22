@@ -65,6 +65,21 @@ variable "enable_policy_types" {
   ]
 }
 
+variable "ai_opt_out_policy" {
+  description = "A map of AI services opt-out policies to apply to the organization's root."
+  type = map(object({
+    description = string
+    # A description for the AI services opt-out policy
+    content = string
+    # The content of the AI services opt-out policy
+    key = optional(string)
+    # If we created the organizational unit, this is the key to attach the policy to
+    target_id = optional(string)
+    # If the organizational unit already exists, this is the target ID to attach the policy to
+  }))
+  default = {}
+}
+
 variable "resource_control_policies" {
   description = "A map of resource control policies to apply to the organization's root."
   type = map(object({
