@@ -65,6 +65,21 @@ variable "enable_policy_types" {
   ]
 }
 
+variable "resource_control_policies" {
+  description = "A map of resource control policies to apply to the organization's root."
+  type = map(object({
+    description = string
+    # A description for the resource control policy
+    content = string
+    # The content of the resource control policy
+    key = optional(string)
+    # If we created the organizational unit, this is the key to attach the policy to
+    target_id = optional(string)
+    # If the organizational unit already exists, this is the target ID to attach the policy to
+  }))
+  default = {}
+}
+
 variable "tagging_policies" {
   description = "A map of tagging policies to apply to the organization's root."
   type = map(object({

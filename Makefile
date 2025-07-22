@@ -42,7 +42,7 @@ documentation:
 
 documentation-modules:
 	@echo "--> Generating documentation for modules"
-	@find . -type d -regex '.*/modules/[a-za-z\-_$$]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+	@find . -type d -regex '.*/modules/[a-za-z\-\_]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
 		echo "--> Generating documentation for module: $$dir"; \
 		terraform-docs $$dir; \
 	done;
@@ -97,7 +97,7 @@ security-examples:
 		trivy config  --format table --exit-code  1 --severity  CRITICAL,HIGH --ignorefile .trivyignore $$dir; \
 	done;
 
-tests: init
+tests:
 	@echo "--> Running Terraform Tests"
 	@terraform test
 
@@ -111,7 +111,7 @@ validate:
 
 validate-modules:
 	@echo "--> Running terraform validate on modules"
-	@find . -type d -regex '.*/modules/[a-zA-Z\-_$$]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
+	@find . -type d -regex './modules/[a-zA-Z\-]*' -not -path '*.terraform*' 2>/dev/null | while read -r dir; do \
 		echo "--> Validating Module $$dir"; \
 		terraform -chdir=$$dir init -backend=false; \
 		terraform -chdir=$$dir validate; \

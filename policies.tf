@@ -101,3 +101,24 @@ resource "aws_organizations_policy_attachment" "backup_policy_attachment" {
     aws_organizations_organizational_unit.level_5_ous
   ]
 }
+
+#
+## Provision any resource control policies
+#
+resource "aws_organizations_policy" "resource_control_policy" {
+  for_each = var.resource_control_policies
+
+  name        = each.key
+  content     = each.value.content
+  description = each.value.description
+  tags        = var.tags
+  type        = "RESOURCE_CONTROL_POLICY"
+}
+
+## Attach any resource control policies to the organizational root
+resource "aws_organizations_policy_attachment" "resource_control_policy_attachment_root" {
+  for_each = { for k, v in var.resource_control_policies : k => v if v.key == "root" }
+
+  policy_id = aws_organizations_policy.resource_control_policy[each.key].id
+  target_id = local.root_ou
+}
