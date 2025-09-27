@@ -2,9 +2,887 @@
 
 # Terraform AWS Organization Module
 
-## Description
+## Overview
 
-The purpose of this module is to create an AWS organization with a tree of organizational units and accounts. The module also provides the capability to enable AWS services, policy types, and delegation of services to other AWS accounts.
+The Terraform AWS Organization module provides a comprehensive, enterprise-grade solution for managing AWS Organizations with sophisticated governance, policy management, and service delegation capabilities. This module enables organizations to establish a well-structured, secure, and compliant AWS environment with centralized control and automated policy enforcement across all accounts and organizational units.
+
+## Purpose & Intent
+
+### **Problem Statement**
+
+Large enterprises face significant challenges when managing multiple AWS accounts and establishing proper governance:
+
+- **Fragmented Account Management**: Multiple AWS accounts without proper organizational structure or governance
+- **Inconsistent Security Policies**: Lack of centralized policy enforcement across accounts and organizational units
+- **Manual Governance Setup**: Time-consuming and error-prone manual configuration of organizational policies
+- **Service Management Complexity**: Difficulty in managing AWS services across multiple accounts and regions
+- **Compliance Challenges**: Lack of standardized tagging, backup, and resource control policies
+- **Delegation Complexity**: Complex setup for delegating service management to specific accounts
+- **Service Quota Management**: Inconsistent service quota management across the organization
+
+### **Solution**
+
+This module provides a centralized, automated approach to AWS Organization management that:
+
+- **Centralizes Organization Structure**: Creates a hierarchical organizational unit structure with up to 5 levels of nesting
+- **Automates Policy Management**: Implements Service Control Policies (SCPs), Tagging Policies, Backup Policies, Resource Control Policies, and AI Services Opt-out Policies
+- **Enables Service Delegation**: Delegates management of critical AWS services to designated accounts
+- **Manages Service Quotas**: Centralizes service quota management across the organization
+- **Provides Governance Framework**: Establishes comprehensive governance and compliance controls
+- **Reduces Operational Overhead**: Automates organizational setup and policy enforcement
+
+## Key Features
+
+### 🏗️ **Comprehensive Organization Management**
+
+- **Hierarchical OU Structure**: Support for up to 5 levels of nested organizational units
+- **Flexible Organization Design**: Configurable organizational structure with keys for easy reference
+- **Account Management**: Integration with AWS account management and organizational structure
+- **Root Organization Control**: Full control over the root organizational unit and its policies
+
+### 📋 **Advanced Policy Management**
+
+- **Service Control Policies (SCPs)**: Granular access control and permission management
+- **Tagging Policies**: Standardized resource tagging across the organization
+- **Backup Policies**: Centralized backup policy management and enforcement
+- **Resource Control Policies**: Control over resource creation and management
+- **AI Services Opt-out Policies**: Control over AI services usage across the organization
+- **Policy Inheritance**: Automatic policy inheritance through organizational hierarchy
+
+### 🔧 **Service Delegation & Management**
+
+- **Delegated Administrators**: Delegate service management to specific accounts
+- **Multi-Service Support**: Support for Organizations, StackSets, Access Analyzer, GuardDuty, Security Hub, Macie, Inspector, and IPAM
+- **Service Principal Management**: Automatic service principal configuration
+- **Service-Linked Roles**: Automated creation of required service-linked roles
+
+### 📊 **Service Quota Management**
+
+- **Centralized Quota Control**: Manage service quotas across the organization
+- **Multi-Service Quotas**: Support for quotas across multiple AWS services
+- **Regional Quota Management**: Proper handling of regional and global service quotas
+- **Quota Monitoring**: Integration with AWS Service Quotas for monitoring and alerting
+
+### 🛡️ **Security & Governance**
+
+- **Least Privilege Access**: Granular control over service access and permissions
+- **Policy Enforcement**: Automated enforcement of organizational policies
+- **Compliance Framework**: Built-in compliance and governance controls
+- **Audit Trail**: Comprehensive logging and monitoring capabilities
+
+### ⚙️ **Operational Excellence**
+
+- **Terraform State Management**: Full Terraform state management for all resources
+- **Resource Tagging**: Consistent tagging across all created resources
+- **Output Management**: Comprehensive outputs for integration with other modules
+- **Dependency Management**: Proper resource dependencies and lifecycle management
+- **Multi-Provider Support**: Support for multiple AWS providers and regions
+
+## Architecture
+
+### **Organizational Structure**
+
+```mermaid
+graph TB
+    subgraph "AWS Organization"
+        A[Root OU]
+        
+        subgraph "Level 1 OUs"
+            B[Infrastructure]
+            C[Workloads]
+            D[Security]
+            E[Sandbox]
+        end
+        
+        subgraph "Level 2 OUs - Workloads"
+            F[Development]
+            G[Production]
+            H[Staging]
+        end
+        
+        subgraph "Level 3 OUs - Production"
+            I[Web Services]
+            J[Data Services]
+            K[API Services]
+        end
+        
+        subgraph "Level 4 OUs - Web Services"
+            L[Frontend]
+            M[Backend]
+        end
+        
+        subgraph "Level 5 OUs - Frontend"
+            N[React Apps]
+            O[Static Sites]
+        end
+    end
+    
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    C --> F
+    C --> G
+    C --> H
+    G --> I
+    G --> J
+    G --> K
+    I --> L
+    I --> M
+    L --> N
+    L --> O
+```
+
+### **Policy Management Flow**
+
+```mermaid
+graph LR
+    subgraph "Policy Types"
+        A[Service Control Policies]
+        B[Tagging Policies]
+        C[Backup Policies]
+        D[Resource Control Policies]
+        E[AI Opt-out Policies]
+    end
+    
+    subgraph "Policy Application"
+        F[Root OU Policies]
+        G[OU-Specific Policies]
+        H[Inherited Policies]
+    end
+    
+    subgraph "Policy Enforcement"
+        I[Account Level]
+        J[Resource Level]
+        K[Service Level]
+    end
+    
+    A --> F
+    B --> G
+    C --> H
+    D --> F
+    E --> G
+    
+    F --> I
+    G --> J
+    H --> K
+```
+
+### **Service Delegation Architecture**
+
+```mermaid
+graph TB
+    subgraph "Master Account"
+        A[Organization Management]
+        B[Policy Management]
+        C[Service Quota Management]
+    end
+    
+    subgraph "Delegated Accounts"
+        D[Audit Account<br/>- Security Hub<br/>- GuardDuty<br/>- Macie<br/>- Inspector]
+        E[Network Account<br/>- IPAM<br/>- VPC Management]
+        F[Operations Account<br/>- StackSets<br/>- Organizations]
+    end
+    
+    subgraph "Member Accounts"
+        G[Production Accounts]
+        H[Development Accounts]
+        I[Sandbox Accounts]
+    end
+    
+    A --> D
+    A --> E
+    A --> F
+    D --> G
+    D --> H
+    D --> I
+    E --> G
+    E --> H
+    E --> I
+    F --> G
+    F --> H
+    F --> I
+```
+
+## Usage
+
+### **Basic Usage - Simple Organization Structure**
+
+```hcl
+module "organization" {
+  source = "appvia/organization/aws"
+  version = "0.1.0"
+
+  tags = {
+    Environment = "production"
+    ManagedBy   = "terraform"
+    Purpose     = "organization"
+  }
+
+  organization = {
+    units = [
+      {
+        name = "Infrastructure"
+        key  = "infrastructure"
+      },
+      {
+        name = "Workloads"
+        key  = "workloads"
+        units = [
+          {
+            name = "Development"
+            key  = "workloads/development"
+          },
+          {
+            name = "Production"
+            key  = "workloads/production"
+          }
+        ]
+      },
+      {
+        name = "Sandbox"
+        key  = "sandbox"
+      }
+    ]
+  }
+
+  enable_aws_services = [
+    "access-analyzer.amazonaws.com",
+    "cloudtrail.amazonaws.com",
+    "config.amazonaws.com",
+    "guardduty.amazonaws.com",
+    "securityhub.amazonaws.com",
+    "sso.amazonaws.com"
+  ]
+
+  enable_policy_types = [
+    "SERVICE_CONTROL_POLICY",
+    "TAG_POLICY",
+    "BACKUP_POLICY"
+  ]
+}
+```
+
+### **Advanced Usage - Enterprise Organization with Policies**
+
+```hcl
+module "organization" {
+  source = "appvia/organization/aws"
+  version = "0.1.0"
+
+  tags = {
+    Environment     = "production"
+    BusinessUnit    = "IT"
+    Compliance      = "required"
+    DataClassification = "confidential"
+  }
+
+  # Organizational Structure
+  organization = {
+    units = [
+      {
+        name = "Infrastructure"
+        key  = "infrastructure"
+      },
+      {
+        name = "Workloads"
+        key  = "workloads"
+        units = [
+          {
+            name = "Development"
+            key  = "workloads/development"
+            units = [
+              {
+                name = "Web Services"
+                key  = "workloads/development/web"
+              },
+              {
+                name = "Data Services"
+                key  = "workloads/development/data"
+              }
+            ]
+          },
+          {
+            name = "Production"
+            key  = "workloads/production"
+            units = [
+              {
+                name = "Web Services"
+                key  = "workloads/production/web"
+                units = [
+                  {
+                    name = "Frontend"
+                    key  = "workloads/production/web/frontend"
+                  },
+                  {
+                    name = "Backend"
+                    key  = "workloads/production/web/backend"
+                  }
+                ]
+              },
+              {
+                name = "Data Services"
+                key  = "workloads/production/data"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        name = "Security"
+        key  = "security"
+      },
+      {
+        name = "Sandbox"
+        key  = "sandbox"
+      }
+    ]
+  }
+
+  # AWS Services Configuration
+  enable_aws_services = [
+    "access-analyzer.amazonaws.com",
+    "account.amazonaws.com",
+    "cloudtrail.amazonaws.com",
+    "compute-optimizer.amazonaws.com",
+    "config-multiaccountsetup.amazonaws.com",
+    "config.amazonaws.com",
+    "controltower.amazonaws.com",
+    "cost-optimization-hub.bcm.amazonaws.com",
+    "guardduty.amazonaws.com",
+    "ram.amazonaws.com",
+    "securityhub.amazonaws.com",
+    "servicequotas.amazonaws.com",
+    "sso.amazonaws.com",
+    "tagpolicies.tag.amazonaws.com"
+  ]
+
+  enable_policy_types = [
+    "AISERVICES_OPT_OUT_POLICY",
+    "BACKUP_POLICY",
+    "RESOURCE_CONTROL_POLICY",
+    "SERVICE_CONTROL_POLICY",
+    "TAG_POLICY"
+  ]
+
+  # Service Delegation
+  enable_delegation = {
+    organizations = {
+      account_id = "123456789012" # Audit Account
+    }
+    securityhub = {
+      account_id = "123456789012" # Audit Account
+    }
+    guardduty = {
+      account_id = "123456789012" # Audit Account
+    }
+    macie = {
+      account_id = "123456789012" # Audit Account
+    }
+    inspection = {
+      account_id = "123456789012" # Audit Account
+    }
+    ipam = {
+      account_id = "987654321098" # Network Account
+    }
+    stacksets = {
+      account_id = "111111111111" # Operations Account
+    }
+  }
+
+  # Service Control Policies
+  service_control_policies = {
+    "DenyRootActions" = {
+      description = "Deny all actions for root user"
+      content = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Deny"
+            Principal = "*"
+            Action = "*"
+            Resource = "*"
+            Condition = {
+              StringEquals = {
+                "aws:PrincipalType" = "Root"
+              }
+            }
+          }
+        ]
+      })
+      key = "root"
+    }
+
+    "DenySandboxProduction" = {
+      description = "Deny production resources in sandbox"
+      content = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Deny"
+            Action = [
+              "rds:*",
+              "redshift:*",
+              "elasticache:*"
+            ]
+            Resource = "*"
+          }
+        ]
+      })
+      key = "sandbox"
+    }
+
+    "DenyDevelopmentProduction" = {
+      description = "Deny production resources in development"
+      content = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Deny"
+            Action = [
+              "rds:CreateDBInstance",
+              "rds:ModifyDBInstance"
+            ]
+            Resource = "*"
+            Condition = {
+              StringEquals = {
+                "rds:DatabaseClass" = "db.r5.24xlarge"
+              }
+            }
+          }
+        ]
+      })
+      key = "workloads/development"
+    }
+  }
+
+  # Tagging Policies
+  tagging_policies = {
+    "MandatoryTags" = {
+      description = "Enforce mandatory resource tagging"
+      content = jsonencode({
+        tags = {
+          Environment = {
+            tag_key = "Environment"
+            tag_value = ["Development", "Staging", "Production"]
+            enforce_for = ["ec2:instance", "s3:bucket", "rds:db"]
+          }
+          Owner = {
+            tag_key = "Owner"
+            tag_value = ["*"]
+            enforce_for = ["ec2:instance", "s3:bucket", "rds:db"]
+          }
+          CostCenter = {
+            tag_key = "CostCenter"
+            tag_value = ["*"]
+            enforce_for = ["ec2:instance", "s3:bucket", "rds:db"]
+          }
+        }
+      })
+      key = "root"
+    }
+
+    "ProductionTags" = {
+      description = "Additional tags for production resources"
+      content = jsonencode({
+        tags = {
+          DataClassification = {
+            tag_key = "DataClassification"
+            tag_value = ["Public", "Internal", "Confidential", "Restricted"]
+            enforce_for = ["ec2:instance", "s3:bucket", "rds:db"]
+          }
+          BackupRequired = {
+            tag_key = "BackupRequired"
+            tag_value = ["true", "false"]
+            enforce_for = ["ec2:instance", "s3:bucket", "rds:db"]
+          }
+        }
+      })
+      key = "workloads/production"
+    }
+  }
+
+  # Backup Policies
+  backup_policies = {
+    "ProductionBackup" = {
+      description = "Backup policy for production resources"
+      content = jsonencode({
+        rules = [
+          {
+            name = "ProductionBackupRule"
+            target_backup_vault_name = "ProductionBackupVault"
+            schedule_expression = "cron(0 2 * * ? *)"
+            lifecycle = {
+              delete_after_days = 90
+              move_to_cold_storage_after_days = 30
+            }
+            recovery_point_tags = {
+              Environment = "Production"
+              BackupType = "Automated"
+            }
+          }
+        ]
+      })
+      key = "workloads/production"
+    }
+  }
+
+  # Resource Control Policies
+  resource_control_policies = {
+    "DenyUnapprovedRegions" = {
+      description = "Deny resources in unapproved regions"
+      content = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Deny"
+            Action = "*"
+            Resource = "*"
+            Condition = {
+              StringNotEquals = {
+                "aws:RequestedRegion" = ["us-east-1", "us-west-2", "eu-west-1"]
+              }
+            }
+          }
+        ]
+      })
+      key = "root"
+    }
+  }
+
+  # AI Services Opt-out Policies
+  ai_opt_out_policy = {
+    "OptOutAI" = {
+      description = "Opt out of AI services for sensitive workloads"
+      content = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Deny"
+            Action = [
+              "bedrock:*",
+              "comprehend:*",
+              "forecast:*",
+              "personalize:*",
+              "rekognition:*",
+              "textract:*",
+              "transcribe:*",
+              "translate:*"
+            ]
+            Resource = "*"
+          }
+        ]
+      })
+      key = "workloads/production/data"
+    }
+  }
+}
+
+# Service Quotas Management
+module "service_quotas" {
+  source = "./modules/service_quotas"
+
+  service_quotas = [
+    {
+      service_code = "ec2"
+      quota_code   = "L-1216C47A" # Running On-Demand All G and VT instances
+      value        = 100
+    },
+    {
+      service_code = "ec2"
+      quota_code   = "L-0263D0A3" # Running On-Demand F instances
+      value        = 50
+    },
+    {
+      service_code = "s3"
+      quota_code   = "L-89B4F0A3" # Number of buckets
+      value        = 1000
+    },
+    {
+      service_code = "rds"
+      quota_code   = "L-29A0A3C3" # DB instances
+      value        = 200
+    }
+  ]
+
+  providers = {
+    aws = aws.us-east-1
+  }
+}
+```
+
+### **Use Cases**
+
+#### **1. Enterprise Multi-Account Strategy**
+
+```hcl
+# For large enterprises with complex organizational structures
+module "enterprise_organization" {
+  source = "appvia/organization/aws"
+  
+  tags = {
+    Environment = "production"
+    BusinessUnit = "Enterprise"
+    Compliance = "required"
+  }
+
+  organization = {
+    units = [
+      {
+        name = "Core"
+        key  = "core"
+        units = [
+          {
+            name = "Security"
+            key  = "core/security"
+          },
+          {
+            name = "Networking"
+            key  = "core/networking"
+          },
+          {
+            name = "Shared Services"
+            key  = "core/shared"
+          }
+        ]
+      },
+      {
+        name = "Business Units"
+        key  = "business"
+        units = [
+          {
+            name = "Finance"
+            key  = "business/finance"
+          },
+          {
+            name = "Marketing"
+            key  = "business/marketing"
+          },
+          {
+            name = "Engineering"
+            key  = "business/engineering"
+          }
+        ]
+      }
+    ]
+  }
+
+  enable_delegation = {
+    securityhub = { account_id = "111111111111" }
+    guardduty   = { account_id = "111111111111" }
+    macie       = { account_id = "111111111111" }
+    ipam        = { account_id = "222222222222" }
+  }
+
+  service_control_policies = {
+    "EnterpriseGovernance" = {
+      description = "Enterprise-wide governance controls"
+      content = file("${path.module}/policies/enterprise-governance.json")
+      key = "root"
+    }
+  }
+}
+```
+
+#### **2. Compliance-Focused Organization**
+
+```hcl
+# For organizations with strict regulatory requirements
+module "compliance_organization" {
+  source = "appvia/organization/aws"
+  
+  tags = {
+    Environment = "production"
+    Compliance = "pci-dss"
+    DataClassification = "confidential"
+  }
+
+  organization = {
+    units = [
+      {
+        name = "PCI Environment"
+        key  = "pci"
+        units = [
+          {
+            name = "Cardholder Data Environment"
+            key  = "pci/cde"
+          },
+          {
+            name = "DMZ"
+            key  = "pci/dmz"
+          }
+        ]
+      },
+      {
+        name = "Non-PCI Environment"
+        key  = "non-pci"
+      }
+    ]
+  }
+
+  service_control_policies = {
+    "PCIDSSControls" = {
+      description = "PCI DSS compliance controls"
+      content = file("${path.module}/policies/pci-dss.json")
+      key = "pci"
+    }
+  }
+
+  tagging_policies = {
+    "PCITagging" = {
+      description = "PCI DSS tagging requirements"
+      content = file("${path.module}/policies/pci-tagging.json")
+      key = "pci"
+    }
+  }
+}
+```
+
+#### **3. Development-Focused Organization**
+
+```hcl
+# For development and testing environments
+module "dev_organization" {
+  source = "appvia/organization/aws"
+  
+  tags = {
+    Environment = "development"
+    Purpose = "development"
+  }
+
+  organization = {
+    units = [
+      {
+        name = "Development"
+        key  = "development"
+        units = [
+          {
+            name = "Feature Development"
+            key  = "development/features"
+          },
+          {
+            name = "Testing"
+            key  = "development/testing"
+          }
+        ]
+      },
+      {
+        name = "Staging"
+        key  = "staging"
+      }
+    ]
+  }
+
+  service_control_policies = {
+    "DevRestrictions" = {
+      description = "Development environment restrictions"
+      content = file("${path.module}/policies/dev-restrictions.json")
+      key = "development"
+    }
+  }
+}
+```
+
+## Monitoring & Troubleshooting
+
+### **CloudWatch Logs and Metrics**
+
+The module creates comprehensive monitoring capabilities:
+
+```bash
+# View organization structure
+aws organizations list-organizational-units-for-parent --parent-id r-1234
+
+# Check policy attachments
+aws organizations list-policies-for-target --target-id ou-1234567890
+
+# Monitor service delegation
+aws organizations list-delegated-administrators
+
+# Check service quotas
+aws service-quotas get-service-quota --service-code ec2 --quota-code L-1216C47A
+```
+
+### **Key Monitoring Metrics**
+
+| Service | Metric | Description | Use Case |
+|---------|--------|-------------|----------|
+| Organizations | `OrganizationEvents` | Organization management events | Monitor organizational changes |
+| Policies | `PolicyAttachments` | Policy attachment events | Track policy enforcement |
+| Service Quotas | `QuotaUtilization` | Service quota usage | Monitor quota consumption |
+| Delegation | `DelegationEvents` | Service delegation events | Track delegation changes |
+
+### **Common Issues & Solutions**
+
+#### **1. Organizational Unit Creation Failures**
+
+```
+Error: Failed to create organizational unit
+```
+
+**Solutions**:
+
+- Verify organizational unit names are unique within the parent
+- Check for naming conflicts with existing OUs
+- Ensure proper IAM permissions for Organizations service
+- Verify the parent OU exists and is accessible
+
+#### **2. Policy Attachment Issues**
+
+```
+Error: Policy attachment failed
+```
+
+**Solutions**:
+
+- Verify policy content is valid JSON
+- Check target OU exists and is accessible
+- Ensure proper IAM permissions for policy management
+- Verify policy type is enabled for the organization
+
+#### **3. Service Delegation Failures**
+
+```
+Error: Service delegation failed
+```
+
+**Solutions**:
+
+- Verify target account exists and is part of the organization
+- Check service principal is enabled for the organization
+- Ensure proper IAM permissions for delegation
+- Verify service-linked roles are created
+
+### **Operational Best Practices**
+
+1. **Organizational Design**: Plan organizational structure before implementation
+2. **Policy Management**: Use version control for policy documents
+3. **Delegation Strategy**: Clearly define service ownership and delegation
+4. **Quota Management**: Regularly review and update service quotas
+5. **Monitoring**: Implement comprehensive monitoring and alerting
+
+## Requirements
+
+### **Prerequisites**
+
+- AWS Organizations enabled
+- Appropriate IAM permissions for Organizations service
+- Target accounts for service delegation
+- Service quotas configuration (if using service quotas)
+
+### **AWS Services Used**
+
+- AWS Organizations
+- AWS Service Quotas
+- AWS IAM (for service-linked roles)
+- Various AWS services (for delegation)
+
+### **Permissions Required**
+
+- Organizations administrator
+- IAM permissions for service-linked roles
+- Service-specific permissions for delegation
+- Service Quotas permissions (if using quotas)
 
 ### Organizational Units
 
@@ -219,7 +1097,7 @@ module "organization" {
 The `terraform-docs` utility is used to generate this README. Follow the below steps to update:
 
 1. Make changes to the `.terraform-docs.yml` file
-2. Fetch the `terraform-docs` binary (https://terraform-docs.io/user-guide/installation/)
+2. Fetch the `terraform-docs` binary (<https://terraform-docs.io/user-guide/installation/>)
 3. Run `terraform-docs markdown table --output-file ${PWD}/README.md --output-mode inject .`
 
 <!-- BEGIN_TF_DOCS -->
