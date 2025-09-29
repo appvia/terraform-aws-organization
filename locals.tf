@@ -88,10 +88,10 @@ locals {
     for ou in local.level_1_ou_arguments :
     {
       key       = ou.key
-      id        = aws_organizations_organizational_unit.level_1_ous[ou.key].id,
-      arn       = aws_organizations_organizational_unit.level_1_ous[ou.key].arn,
-      parent_id = aws_organizations_organizational_unit.level_1_ous[ou.key].parent_id,
-      name      = aws_organizations_organizational_unit.level_1_ous[ou.key].name,
+      id        = try(aws_organizations_organizational_unit.level_1_ous[ou.key].id, null)
+      arn       = try(aws_organizations_organizational_unit.level_1_ous[ou.key].arn,null)
+      parent_id = try(aws_organizations_organizational_unit.level_1_ous[ou.key].parent_id, null)
+      name      = (aws_organizations_organizational_unit.level_1_ous[ou.key].name, ou.name)
     }
   ]
   level_2_ou_attributes = [
