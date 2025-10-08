@@ -51,6 +51,10 @@ variable "enable_delegation" {
       account_id = string
       # The account id of the account to delegate the management of StackSets to
     }), null)
+    config = optional(object({
+      account_id = string
+      # The id of the account to delegate the management of Config to
+    }), null)
   })
   default = {
     access_analyzer  = null
@@ -64,5 +68,6 @@ variable "enable_delegation" {
     organizations    = null
     securityhub      = null
     stacksets        = null
+    config           = null
   }
 }
