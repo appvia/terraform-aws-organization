@@ -93,3 +93,10 @@ resource "aws_inspector2_delegated_admin_account" "inspection_organization_admin
 
   account_id = var.enable_delegation.inspector.account_id
 }
+
+resource "aws_organizations_delegated_administrator" "config_administrator" {
+  count = var.enable_delegation.config != null ? 1 : 0
+
+  account_id        = var.enable_delegation.config.account_id
+  service_principal = "config.amazonaws.com"
+}
