@@ -68,6 +68,6 @@ variable "enable_delegation" {
     organizations    = null
     securityhub      = null
     stacksets        = null
-    config           = null 
+    config           = null
   }
 }
