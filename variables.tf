@@ -53,6 +53,57 @@ variable "enable_aws_services" {
   ]
 }
 
+variable "observability_centralization_rules" {
+  description = "A list of observability centralization rules to apply to the organization."
+  type = map(object({
+    # The name of the observability centralization rule
+    rule = object({
+      destination = object({
+        # The region of the destination account
+        region = list(string)
+        # The account ID of the destination account
+        account = string
+        # The destination logs configuration
+        destination_logs_configuration = optional(object({
+          logs_encryption_strategy = optional(object({
+            # The encrypted log group strategy (AWS_OWNED or CUSTOMER_MANAGED)
+            encrypted_strategy = string
+            # The encryption conflict resolution strategy (ALLOW or SKIP)
+            encryption_conflict_resolution_strategy = string
+            # The KMS key ARN for the log group, if CUSTOMER_MANAGED is selected
+            kms_key_arn = optional(string, null)
+          }), null)
+          # The destination logs encryption configuration
+          destination_logs_encryption_configuration = optional(object({
+            # The encrypted log group strategy
+            encrypted_log_group_strategy = string
+            # The log group selection criteria
+            log_group_selection_criteria = string
+            # The KMS key ARN for the log group
+            kms_key_arn = string
+          }), null)
+        }), null)
+      })
+      source = object({
+        # The regions of the source accounts
+        regions = list(string)
+        # The scope of the source accounts (OrganizationId = 'o-example123456')
+        scope = string
+        # The source logs configuration
+        source_logs_configuration = optional(object({
+          # The encrypted log group strategy
+          encrypted_log_group_strategy = string
+          # The log group selection criteria
+          log_group_selection_criteria = string
+          # The KMS key ARN for the log group
+          kms_key_arn = optional(string, null)
+        }), null)
+      })
+    })
+  }))
+  default = {}
+}
+
 variable "enable_policy_types" {
   description = "A list of policy types to enable for the organization."
   type        = list(string)
