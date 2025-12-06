@@ -195,44 +195,49 @@ variable "enable_delegation" {
   description = "Provides at the capability to delegate the management of a service to another AWS account."
   type = object({
     access_analyzer = optional(object({
-      account_id = string
       # The id of the account to delegate the management of Access Analyzer to
+      account_id = string
+    }), null)
+    cloudtrail = optional(object({
+      # The id of the account to delegate the management of CloudTrail to
+      account_id = string
     }), null)
     guardduty = optional(object({
-      account_id = string
       # The id of the account to delegate the management of GuardDuty to
+      account_id = string
     }), null)
     inspection = optional(object({
-      account_id = string
       # The id of the account to delegate the management of Inspector to
+      account_id = string
     }), null)
     ipam = optional(object({
-      account_id = string
       # The id of the account to delegate the management of IPAM to
+      account_id = string
     }), null)
     macie = optional(object({
-      account_id = string
       # The id of the account to delegate the management of Macie to
+      account_id = string
     }), null)
     organizations = optional(object({
-      account_id = string
       # The id of the account to delegate the management of Organizations to
+      account_id = string
     }), null)
     securityhub = optional(object({
-      account_id = string
       # The id of the account to delegate the management of Security Hub to
+      account_id = string
     }), null)
     stacksets = optional(object({
-      account_id = string
       # The id of the account to delegate the management of StackSets to
+      account_id = string
     }), null)
     config = optional(object({
-      account_id = string
       # The id of the account to delegate the management of Config to
+      account_id = string
     }), null)
   })
   default = {
     access_analyzer = null
+    cloudtrail      = null
     guardduty       = null
     inspection      = null
     ipam            = null
