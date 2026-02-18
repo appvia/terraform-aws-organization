@@ -4,6 +4,27 @@ variable "tags" {
   type        = map(string)
 }
 
+variable "control_tower" {
+  description = "Configuration for AWS Control Tower service"
+  type = object({
+    # A list of controls to enable in the Control Tower landing zone. 
+    controls = optional(list(object({
+      # The identifier of the control to enable (e.g. "arn:aws:controltower:us-east-1::control/AWS-GR_EC2_VOLUME_INUSE_CHECK")
+      identifier = string
+      # The target identifier for the control - can be either the organization key (e.g. "workloads/production") which will be automatically resolved to the OU ID, or a direct OU ID (e.g. "ou-xxxxxxxxxx")
+      target_identifier = string
+      # A list of parameters to configure for the control.
+      parameters = optional(list(object({
+        # The key of the control parameter (e.g. "AllowedRegions")
+        key = string
+        # The value of the control parameter (e.g. ["us-east-1"])
+        value = string
+      })), [])
+    })), [])
+  })
+  default = null
+}
+
 variable "organization" {
   description = "The organization with the tree of organizational units and accounts to construct. Defaults to an object with an empty list of units and accounts"
   type = object({

@@ -611,6 +611,230 @@ module "service_quotas" {
 }
 ```
 
+### **Control Tower Configuration**
+
+The module supports AWS Control Tower controls, allowing you to enforce governance policies at the organizational level. Control Tower controls provide automated, preventive, and detective guardrails for your organization.
+
+#### **Basic Control Tower Configuration**
+
+```hcl
+module "organization" {
+  source = "appvia/organization/aws"
+  version = "0.1.0"
+
+  tags = {
+    Environment = "production"
+    ManagedBy   = "terraform"
+  }
+
+  organization = {
+    units = [
+      {
+        name = "Infrastructure"
+        key  = "infrastructure"  # Organization key
+      },
+      {
+        name = "Workloads"
+        key  = "workloads"       # Organization key
+      }
+    ]
+  }
+
+  # Enable Control Tower controls
+  # RECOMMENDED: Use organization keys for easy maintenance and consistency
+  control_tower = {
+    controls = [
+      {
+        # Enable EC2 volume encryption check
+        identifier        = "arn:aws:controltower:us-east-1::control/AWS-GR_EC2_VOLUME_INUSE_CHECK"
+        target_identifier = "infrastructure"  # Using organization key
+      },
+      {
+        # Enable S3 bucket versioning enforcement
+        identifier        = "arn:aws:controltower:us-east-1::control/AWS-GR_S3_BUCKET_VERSIONING_ENABLED"
+        target_identifier = "infrastructure"
+      },
+      {
+        # Enable RDS encryption enforcement
+        identifier        = "arn:aws:controltower:us-east-1::control/AWS-GR_RDS_ENCRYPTION_ENABLED"
+        target_identifier = "infrastructure"
+      }
+    ]
+  }
+}
+```
+
+**Flexibility**: You can also use explicit OU IDs if preferred:
+```hcl
+control_tower = {
+  controls = [{
+    target_identifier = "ou-1234567890abcdef0"  # Direct OU ID also works
+  }]
+}
+```
+
+#### **Advanced Control Tower Configuration with Parameters**
+
+```hcl
+module "organization" {
+  source = "appvia/organization/aws"
+  version = "0.1.0"
+
+  tags = {
+    Environment = "production"
+    ManagedBy   = "terraform"
+  }
+
+  organization = {
+    units = [
+      {
+        name = "Production"
+        key  = "production"      # Organization key
+      },
+      {
+        name = "Development"
+        key  = "development"     # Organization key
+      }
+    ]
+  }
+
+  # Configure Control Tower controls with parameters
+  # Using organization keys for clarity and maintainability
+  control_tower = {
+    controls = [
+      {
+        identifier        = "arn:aws:controltower:us-east-1::control/AWS-GR_AURORA_ENCRYPTION_ENABLED"
+        target_identifier = "production"  # Organization key - automatically resolved to OU ID
+      },
+      {
+        # Control with parameters for region restrictions
+        identifier        = "arn:aws:controltower:us-east-1::control/AWS-GR_CLOUDTRAIL_LOG_FILE_VALIDATION_ENABLED"
+        target_identifier = "production"  # Organization key
+        parameters = [
+          {
+            key   = "Regions"
+            value = "[\"us-east-1\", \"us-west-2\", \"eu-west-1\"]"
+          }
+        ]
+      },
+      {
+        # Allowed regions control for Development
+        identifier        = "arn:aws:controltower:us-east-1::control/AWS-GR_RESTRICTED_SSH"
+        target_identifier = "development"  # Organization key for Development OU
+        parameters = [
+          {
+            key   = "AllowedRegions"
+            value = "[\"us-east-1\", \"us-west-2\"]"
+          }
+        ]
+      }
+    ]
+  }
+
+  enable_aws_services = [
+    "controltower.amazonaws.com",
+    "cloudtrail.amazonaws.com",
+    "config.amazonaws.com"
+  ]
+}
+```
+
+#### **Control Tower Controls - Common Use Cases**
+
+| Control | Identifier | Purpose | Parameters |
+|---------|-----------|---------|-----------|
+| EC2 Volume Encryption | `AWS-GR_EC2_VOLUME_INUSE_CHECK` | Enforce EBS volume encryption | None |
+| S3 Versioning | `AWS-GR_S3_BUCKET_VERSIONING_ENABLED` | Enforce S3 bucket versioning | None |
+| RDS Encryption | `AWS-GR_RDS_ENCRYPTION_ENABLED` | Enforce RDS encryption | None |
+| CloudTrail Logging | `AWS-GR_CLOUDTRAIL_LOG_FILE_VALIDATION_ENABLED` | Enforce CloudTrail with log validation | Regions |
+| Allowed Regions | `AWS-GR_RESTRICTED_SSH` | Restrict resource creation to allowed regions | AllowedRegions |
+| DynamoDB Encryption | `AWS-GR_DYNAMODB_TABLE_ENCRYPTION_ENABLED` | Enforce DynamoDB encryption | None |
+| GuardDuty Detection | `AWS-GR_GUARDDUTY_ENABLED_CENTRALIZED` | Enable GuardDuty with centralized monitoring | None |
+| SecurityHub | `AWS-GR_SECURITYHUB_ENABLED_CENTRALIZED` | Enable Security Hub with centralized monitoring | None |
+
+#### **Key Control Tower Features**
+
+- **Preventive Controls**: Disallow specific actions across the organization
+- **Detective Controls**: Monitor and alert on resource compliance
+- **Easy Targeting**: Apply controls to specific OUs or the entire organization
+- **Parameter Support**: Configure control behavior with parameters
+- **AWS Managed**: Controls are maintained and updated by AWS
+
+#### **Control Tower Requirements**
+
+Before using Control Tower controls:
+
+1. **Control Tower Setup**: AWS Control Tower must be enabled in your organization
+2. **Supported Regions**: Controls are available in specific AWS regions
+3. **Service Dependencies**: Ensure dependent services are enabled (CloudTrail, Config, etc.)
+4. **IAM Permissions**: Account must have permissions to enable Control Tower controls
+5. **Target Identifier Format**: Can be either organization key (e.g., `workloads/production`) or OU ID (e.g., `ou-xxxxxxxxxx`)
+
+#### **Important: OU Identifier vs Organization Key**
+
+The module now supports BOTH organization keys and actual OU IDs for Control Tower controls. The module will automatically resolve organization keys to their corresponding OU IDs:
+
+| Concept | Format | Usage | Example |
+|---------|--------|-------|---------|
+| **Organization Key** | String with hierarchy | Can now be used as target_identifier | `"root"`, `"workloads"`, `"workloads/production"` |
+| **OU ID/ARN** | AWS format | Can also be used as target_identifier | `"ou-1234567890abcdef0"` or ARN format |
+
+**The module automatically resolves organization keys to their OU IDs**, so you can use either approach:
+
+**Example using Organization Key (RECOMMENDED):**
+```hcl
+# ✅ Using organization key - cleaner and easier to maintain
+control_tower = {
+  controls = [{
+    target_identifier = "workloads/production"  # Organization key - will be resolved to OU ID
+  }]
+}
+```
+
+**Example using OU ID (Also Valid):**
+```hcl
+# ✅ Also valid - using explicit OU ID
+control_tower = {
+  controls = [{
+    target_identifier = "ou-1234567890abcdef0"  # Direct OU ID
+  }]
+}
+```
+
+**Why use Organization Keys?** Organization keys provide several advantages:
+1. **Maintainability**: If you change your organizational structure, the keys remain consistent
+2. **Readability**: Clear hierarchical names like "workloads/production" are more intuitive
+3. **Consistency**: Aligns with how you target policies in the same module
+4. **Single Source of Truth**: Define OUs once, reference them everywhere
+
+**How to find your OU IDs (if using direct OU IDs):**
+```bash
+# List all organizational units
+aws organizations list-roots
+aws organizations list-organizational-units-for-parent --parent-id r-xxxx
+
+# Example output:
+# {
+#   "OrganizationalUnits": [
+#     {
+#       "Id": "ou-1234567890abcdef0",
+#       "Name": "Production",
+#       "Arn": "arn:aws:organizations:us-east-1:123456789012:ou/o-xxx/ou-1234567890abcdef0"
+#     }
+#   ]
+# }
+```
+
+#### **Best Practices for Control Tower Controls**
+
+1. **Start with Preventive Controls**: Implement preventive controls first to prevent non-compliant actions
+2. **Layer with Detective Controls**: Add detective controls for ongoing monitoring
+3. **Test Before Production**: Test controls in development OUs first
+4. **Use Organization Keys**: Prefer using organization keys (e.g., "production", "workloads/development") as they are automatically resolved to OU IDs and are easier to maintain
+5. **Use Parameters Wisely**: Configure parameters to match organizational requirements
+6. **Regular Review**: Regularly review and update active controls
+7. **Document Rationale**: Document why each control is enabled for compliance tracking
+
 ### **Use Cases**
 
 #### **1. Enterprise Multi-Account Strategy**
@@ -1114,6 +1338,7 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to resources provisioned by this module. | `map(string)` | n/a | yes |
 | <a name="input_ai_opt_out_policy"></a> [ai\_opt\_out\_policy](#input\_ai\_opt\_out\_policy) | A map of AI services opt-out policies to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the AI services opt-out policy<br/>    content = string<br/>    # The content of the AI services opt-out policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |
 | <a name="input_backup_policies"></a> [backup\_policies](#input\_backup\_policies) | A map of backup policies to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the backup policy<br/>    content = string<br/>    # The content of the backup policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |
+| <a name="input_control_tower"></a> [control\_tower](#input\_control\_tower) | Configuration for AWS Control Tower service | <pre>object({<br/>    # A list of controls to enable in the Control Tower landing zone. <br/>    controls = optional(list(object({<br/>      # The identifier of the control to enable (e.g. "arn:aws:controltower:us-east-1::control/AWS-GR_EC2_VOLUME_INUSE_CHECK")<br/>      identifier = string<br/>      # The target identifier for the control - can be either the organization key (e.g. "workloads/production") which will be automatically resolved to the OU ID, or a direct OU ID (e.g. "ou-xxxxxxxxxx")<br/>      target_identifier = string<br/>      # A list of parameters to configure for the control.<br/>      parameters = optional(list(object({<br/>        # The key of the control parameter (e.g. "AllowedRegions")<br/>        key = string<br/>        # The value of the control parameter (e.g. ["us-east-1"])<br/>        value = string<br/>      })), [])<br/>    })), [])<br/>  })</pre> | `null` | no |
 | <a name="input_enable_aws_services"></a> [enable\_aws\_services](#input\_enable\_aws\_services) | A list of AWS services to enable for the organization. | `list(string)` | <pre>[<br/>  "access-analyzer.amazonaws.com",<br/>  "account.amazonaws.com",<br/>  "cloudtrail.amazonaws.com",<br/>  "compute-optimizer.amazonaws.com",<br/>  "config-multiaccountsetup.amazonaws.com",<br/>  "config.amazonaws.com",<br/>  "controltower.amazonaws.com",<br/>  "cost-optimization-hub.bcm.amazonaws.com",<br/>  "guardduty.amazonaws.com",<br/>  "ram.amazonaws.com",<br/>  "securityhub.amazonaws.com",<br/>  "servicequotas.amazonaws.com",<br/>  "sso.amazonaws.com",<br/>  "tagpolicies.tag.amazonaws.com"<br/>]</pre> | no |
 | <a name="input_enable_delegation"></a> [enable\_delegation](#input\_enable\_delegation) | Provides at the capability to delegate the management of a service to another AWS account. | <pre>object({<br/>    access_analyzer = optional(object({<br/>      # The id of the account to delegate the management of Access Analyzer to<br/>      account_id = string<br/>    }), null)<br/>    cloudtrail = optional(object({<br/>      # The id of the account to delegate the management of CloudTrail to<br/>      account_id = string<br/>    }), null)<br/>    guardduty = optional(object({<br/>      # The id of the account to delegate the management of GuardDuty to<br/>      account_id = string<br/>    }), null)<br/>    inspection = optional(object({<br/>      # The id of the account to delegate the management of Inspector to<br/>      account_id = string<br/>    }), null)<br/>    ipam = optional(object({<br/>      # The id of the account to delegate the management of IPAM to<br/>      account_id = string<br/>    }), null)<br/>    macie = optional(object({<br/>      # The id of the account to delegate the management of Macie to<br/>      account_id = string<br/>    }), null)<br/>    organizations = optional(object({<br/>      # The id of the account to delegate the management of Organizations to<br/>      account_id = string<br/>    }), null)<br/>    securityhub = optional(object({<br/>      # The id of the account to delegate the management of Security Hub to<br/>      account_id = string<br/>    }), null)<br/>    stacksets = optional(object({<br/>      # The id of the account to delegate the management of StackSets to<br/>      account_id = string<br/>    }), null)<br/>    config = optional(object({<br/>      # The id of the account to delegate the management of Config to<br/>      account_id = string<br/>    }), null)<br/>  })</pre> | <pre>{<br/>  "access_analyzer": null,<br/>  "cloudtrail": null,<br/>  "config": null,<br/>  "guardduty": null,<br/>  "inspection": null,<br/>  "ipam": null,<br/>  "macie": null,<br/>  "organizations": null,<br/>  "securityhub": null,<br/>  "stacksets": null<br/>}</pre> | no |
 | <a name="input_enable_policy_types"></a> [enable\_policy\_types](#input\_enable\_policy\_types) | A list of policy types to enable for the organization. | `list(string)` | <pre>[<br/>  "AISERVICES_OPT_OUT_POLICY",<br/>  "BACKUP_POLICY",<br/>  "RESOURCE_CONTROL_POLICY",<br/>  "SERVICE_CONTROL_POLICY",<br/>  "TAG_POLICY"<br/>]</pre> | no |
