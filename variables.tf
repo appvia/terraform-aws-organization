@@ -131,6 +131,7 @@ variable "enable_policy_types" {
   default = [
     "AISERVICES_OPT_OUT_POLICY",
     "BACKUP_POLICY",
+    "BEDROCK_POLICY",
     "RESOURCE_CONTROL_POLICY",
     "SERVICE_CONTROL_POLICY",
     "TAG_POLICY",
