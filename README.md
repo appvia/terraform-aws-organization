@@ -25,7 +25,7 @@ Large enterprises face significant challenges when managing multiple AWS account
 This module provides a centralized, automated approach to AWS Organization management that:
 
 - **Centralizes Organization Structure**: Creates a hierarchical organizational unit structure with up to 5 levels of nesting
-- **Automates Policy Management**: Implements Service Control Policies (SCPs), Tagging Policies, Backup Policies, Resource Control Policies, and AI Services Opt-out Policies
+- **Automates Policy Management**: Implements Service Control Policies (SCPs), Tagging Policies, Backup Policies, EC2 Policies, Resource Control Policies, and AI Services Opt-out Policies
 - **Enables Service Delegation**: Delegates management of critical AWS services to designated accounts
 - **Manages Service Quotas**: Centralizes service quota management across the organization
 - **Provides Governance Framework**: Establishes comprehensive governance and compliance controls
@@ -45,6 +45,7 @@ This module provides a centralized, automated approach to AWS Organization manag
 - **Service Control Policies (SCPs)**: Granular access control and permission management
 - **Tagging Policies**: Standardized resource tagging across the organization
 - **Backup Policies**: Centralized backup policy management and enforcement
+- **EC2 Policies**: Declarative policies for EC2 and EBS settings such as blocking public AMI and snapshot sharing
 - **Resource Control Policies**: Control over resource creation and management
 - **AI Services Opt-out Policies**: Control over AI services usage across the organization
 - **Policy Inheritance**: Automatic policy inheritance through organizational hierarchy
@@ -141,14 +142,15 @@ graph LR
         A[Service Control Policies]
         B[Tagging Policies]
         C[Backup Policies]
-        D[Resource Control Policies]
-        E[AI Opt-out Policies]
+        D[EC2 Policies]
+        E[Resource Control Policies]
+        F[AI Opt-out Policies]
     end
     
     subgraph "Policy Application"
-        F[Root OU Policies]
-        G[OU-Specific Policies]
-        H[Inherited Policies]
+        R[Root OU Policies]
+        O[OU-Specific Policies]
+        P[Inherited Policies]
     end
     
     subgraph "Policy Enforcement"
@@ -157,15 +159,16 @@ graph LR
         K[Service Level]
     end
     
-    A --> F
-    B --> G
-    C --> H
-    D --> F
-    E --> G
+    A --> R
+    B --> O
+    C --> P
+    D --> O
+    E --> R
+    F --> O
     
-    F --> I
-    G --> J
-    H --> K
+    R --> I
+    O --> J
+    P --> K
 ```
 
 ### **Service Delegation Architecture**
@@ -360,6 +363,7 @@ module "organization" {
   enable_policy_types = [
     "AISERVICES_OPT_OUT_POLICY",
     "BACKUP_POLICY",
+    "DECLARATIVE_POLICY_EC2",
     "RESOURCE_CONTROL_POLICY",
     "SERVICE_CONTROL_POLICY",
     "TAG_POLICY"
@@ -524,6 +528,37 @@ module "organization" {
         ]
       })
       key = "workloads/production"
+    }
+  }
+
+  # EC2 Policies
+  ec2_policies = {
+    "deny-public-image-block" = {
+      description = "Controls if Amazon Machine Images (AMIs) are publicly sharable"
+      content = jsonencode({
+        ec2_attributes = {
+          image_block_public_access = {
+            state = {
+              "@@assign" = "block_new_sharing"
+            }
+          }
+        }
+      })
+      key = "workloads"
+    }
+
+    "deny-public-snapshot-block" = {
+      description = "Controls if Amazon EBS snapshots are publicly accessible"
+      content = jsonencode({
+        ec2_attributes = {
+          snapshot_block_public_access = {
+            state = {
+              "@@assign" = "block_new_sharing"
+            }
+          }
+        }
+      })
+      key = "workloads"
     }
   }
 
@@ -1166,6 +1201,7 @@ enable_aws_services = [
 enable_policy_types = [
   "AISERVICES_OPT_OUT_POLICY",
   "BACKUP_POLICY",
+  "DECLARATIVE_POLICY_EC2",
   "SERVICE_CONTROL_POLICY",
   "TAG_POLICY"
 ]
@@ -1281,6 +1317,85 @@ backup_policies = {
 }
 ```
 
+### EC2 Policies
+
+EC2 declarative policies can be attached to the organization's root or to specific organizational units. They enforce baseline EC2 and EBS configuration at the service level, such as blocking public sharing of AMIs and EBS snapshots. The `ec2_policies` input variable is a map of EC2 policies to apply. The map key is the name of the policy and the value is an object with the following attributes:
+
+- `description` - A description for the EC2 policy
+- `content` - The content of the EC2 declarative policy
+- `key` - If we created the organizational unit, this is the key to attach the policy to
+- `target_id` - If the organizational unit already exists, this is the target ID to attach the policy to
+
+You must include `DECLARATIVE_POLICY_EC2` in `enable_policy_types` before creating EC2 policies.
+
+An example where we have created the organizational units below
+
+```
+organization = {
+  units = [
+    {
+      name = "Workloads",
+      key  = "workloads",
+    }
+  ]
+}
+
+ec2_policies = {
+  "deny-public-image-block" = {
+    description = "Controls if Amazon Machine Images (AMIs) are publicly sharable"
+    content     = file("${path.module}/policies/deny-public-image-block.json")
+    key         = "workloads"
+  }
+  "deny-public-snapshot-block" = {
+    description = "Controls if Amazon EBS snapshots are publicly accessible"
+    content     = file("${path.module}/policies/deny-public-snapshot-block.json")
+    key         = "workloads"
+  }
+}
+```
+
+Example policy content for `deny-public-image-block.json`:
+
+```json
+{
+  "ec2_attributes": {
+    "image_block_public_access": {
+      "state": {
+        "@@assign": "block_new_sharing"
+      }
+    }
+  }
+}
+```
+
+Example policy content for `deny-public-snapshot-block.json`:
+
+```json
+{
+  "ec2_attributes": {
+    "snapshot_block_public_access": {
+      "state": {
+        "@@assign": "block_new_sharing"
+      }
+    }
+  }
+}
+```
+
+The `block_new_sharing` state blocks new public sharing while leaving resources that were already publicly shared unchanged. For other supported EC2 declarative policy attributes and state values, see the [EC2 policy syntax documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ec2_syntax.html).
+
+Alternatively, if the organizational unit already exists, you can attach the policy to the target ID. An example is provided below
+
+```
+ec2_policies = {
+  "deny-public-image-block" = {
+    description = "Controls if Amazon Machine Images (AMIs) are publicly sharable"
+    content     = file("${path.module}/policies/deny-public-image-block.json")
+    target_id   = "ou-123456789012"
+  }
+}
+```
+
 ### Service Quotas
 
 Service quotas can be applied to the organization. The `service_quotas` input variable is a collection of service quotas to apply to the organization. The collection is a list of objects with the following attributes:
@@ -1339,9 +1454,10 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 | <a name="input_ai_opt_out_policy"></a> [ai\_opt\_out\_policy](#input\_ai\_opt\_out\_policy) | A map of AI services opt-out policies to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the AI services opt-out policy<br/>    content = string<br/>    # The content of the AI services opt-out policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |
 | <a name="input_backup_policies"></a> [backup\_policies](#input\_backup\_policies) | A map of backup policies to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the backup policy<br/>    content = string<br/>    # The content of the backup policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |
 | <a name="input_control_tower"></a> [control\_tower](#input\_control\_tower) | Configuration for AWS Control Tower service | <pre>object({<br/>    # A list of controls to enable in the Control Tower landing zone. <br/>    controls = optional(list(object({<br/>      # The identifier of the control to enable (e.g. "arn:aws:controltower:us-east-1::control/AWS-GR_EC2_VOLUME_INUSE_CHECK")<br/>      identifier = string<br/>      # The target identifier for the control - can be either the organization key (e.g. "workloads/production") which will be automatically resolved to the OU ID, or a direct OU ID (e.g. "ou-xxxxxxxxxx")<br/>      target_identifier = string<br/>      # A list of parameters to configure for the control.<br/>      parameters = optional(list(object({<br/>        # The key of the control parameter (e.g. "AllowedRegions")<br/>        key = string<br/>        # The value of the control parameter (e.g. ["us-east-1"])<br/>        value = string<br/>      })), [])<br/>    })), [])<br/>  })</pre> | `null` | no |
+| <a name="input_ec2_policies"></a> [ec2\_policies](#input\_ec2\_policies) | A map of EC2 policies to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the EC2 policy<br/>    content = string<br/>    # The content of the EC2 control policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |
 | <a name="input_enable_aws_services"></a> [enable\_aws\_services](#input\_enable\_aws\_services) | A list of AWS services to enable for the organization. | `list(string)` | <pre>[<br/>  "access-analyzer.amazonaws.com",<br/>  "account.amazonaws.com",<br/>  "cloudtrail.amazonaws.com",<br/>  "compute-optimizer.amazonaws.com",<br/>  "config-multiaccountsetup.amazonaws.com",<br/>  "config.amazonaws.com",<br/>  "controltower.amazonaws.com",<br/>  "cost-optimization-hub.bcm.amazonaws.com",<br/>  "guardduty.amazonaws.com",<br/>  "ram.amazonaws.com",<br/>  "securityhub.amazonaws.com",<br/>  "servicequotas.amazonaws.com",<br/>  "sso.amazonaws.com",<br/>  "tagpolicies.tag.amazonaws.com"<br/>]</pre> | no |
 | <a name="input_enable_delegation"></a> [enable\_delegation](#input\_enable\_delegation) | Provides at the capability to delegate the management of a service to another AWS account. | <pre>object({<br/>    access_analyzer = optional(object({<br/>      # The id of the account to delegate the management of Access Analyzer to<br/>      account_id = string<br/>    }), null)<br/>    cloudtrail = optional(object({<br/>      # The id of the account to delegate the management of CloudTrail to<br/>      account_id = string<br/>    }), null)<br/>    guardduty = optional(object({<br/>      # The id of the account to delegate the management of GuardDuty to<br/>      account_id = string<br/>    }), null)<br/>    inspection = optional(object({<br/>      # The id of the account to delegate the management of Inspector to<br/>      account_id = string<br/>    }), null)<br/>    ipam = optional(object({<br/>      # The id of the account to delegate the management of IPAM to<br/>      account_id = string<br/>    }), null)<br/>    macie = optional(object({<br/>      # The id of the account to delegate the management of Macie to<br/>      account_id = string<br/>    }), null)<br/>    organizations = optional(object({<br/>      # The id of the account to delegate the management of Organizations to<br/>      account_id = string<br/>    }), null)<br/>    securityhub = optional(object({<br/>      # The id of the account to delegate the management of Security Hub to<br/>      account_id = string<br/>    }), null)<br/>    stacksets = optional(object({<br/>      # The id of the account to delegate the management of StackSets to<br/>      account_id = string<br/>    }), null)<br/>    config = optional(object({<br/>      # The id of the account to delegate the management of Config to<br/>      account_id = string<br/>    }), null)<br/>  })</pre> | <pre>{<br/>  "access_analyzer": null,<br/>  "cloudtrail": null,<br/>  "config": null,<br/>  "guardduty": null,<br/>  "inspection": null,<br/>  "ipam": null,<br/>  "macie": null,<br/>  "organizations": null,<br/>  "securityhub": null,<br/>  "stacksets": null<br/>}</pre> | no |
-| <a name="input_enable_policy_types"></a> [enable\_policy\_types](#input\_enable\_policy\_types) | A list of policy types to enable for the organization. | `list(string)` | <pre>[<br/>  "AISERVICES_OPT_OUT_POLICY",<br/>  "BACKUP_POLICY",<br/>  "BEDROCK_POLICY",<br/>  "RESOURCE_CONTROL_POLICY",<br/>  "SERVICE_CONTROL_POLICY",<br/>  "TAG_POLICY"<br/>]</pre> | no |
+| <a name="input_enable_policy_types"></a> [enable\_policy\_types](#input\_enable\_policy\_types) | A list of policy types to enable for the organization. | `list(string)` | <pre>[<br/>  "AISERVICES_OPT_OUT_POLICY",<br/>  "BACKUP_POLICY",<br/>  "BEDROCK_POLICY",<br/>  "CHATBOT_POLICY",<br/>  "DECLARATIVE_POLICY_EC2",<br/>  "INSPECTOR_POLICY",<br/>  "RESOURCE_CONTROL_POLICY",<br/>  "S3_POLICY",<br/>  "SECURITYHUB_POLICY",<br/>  "SERVICE_CONTROL_POLICY",<br/>  "TAG_POLICY",<br/>  "UPGRADE_ROLLOUT_POLICY"<br/>]</pre> | no |
 | <a name="input_observability_centralization_rules"></a> [observability\_centralization\_rules](#input\_observability\_centralization\_rules) | A list of observability centralization rules to apply to the organization. | <pre>map(object({<br/>    # The name of the observability centralization rule<br/>    rule = object({<br/>      destination = object({<br/>        # The region of the destination account<br/>        region = list(string)<br/>        # The account ID of the destination account<br/>        account = string<br/>        # The destination logs configuration<br/>        destination_logs_configuration = optional(object({<br/>          logs_encryption_strategy = optional(object({<br/>            # The encrypted log group strategy (AWS_OWNED or CUSTOMER_MANAGED)<br/>            encrypted_strategy = string<br/>            # The encryption conflict resolution strategy (ALLOW or SKIP)<br/>            encryption_conflict_resolution_strategy = string<br/>            # The KMS key ARN for the log group, if CUSTOMER_MANAGED is selected<br/>            kms_key_arn = optional(string, null)<br/>          }), null)<br/>          # The destination logs encryption configuration<br/>          destination_logs_encryption_configuration = optional(object({<br/>            # The encrypted log group strategy<br/>            encrypted_log_group_strategy = string<br/>            # The log group selection criteria<br/>            log_group_selection_criteria = string<br/>            # The KMS key ARN for the log group<br/>            kms_key_arn = string<br/>          }), null)<br/>        }), null)<br/>      })<br/>      source = object({<br/>        # The regions of the source accounts<br/>        regions = list(string)<br/>        # The scope of the source accounts (OrganizationId = 'o-example123456')<br/>        scope = string<br/>        # The source logs configuration<br/>        source_logs_configuration = optional(object({<br/>          # The encrypted log group strategy<br/>          encrypted_log_group_strategy = string<br/>          # The log group selection criteria<br/>          log_group_selection_criteria = string<br/>          # The KMS key ARN for the log group<br/>          kms_key_arn = optional(string, null)<br/>        }), null)<br/>      })<br/>    })<br/>  }))</pre> | `{}` | no |
 | <a name="input_organization"></a> [organization](#input\_organization) | The organization with the tree of organizational units and accounts to construct. Defaults to an object with an empty list of units and accounts | <pre>object({<br/>    units = optional(list(object({<br/>      name = string,<br/>      key  = string,<br/>      units = optional(list(object({<br/>        name = string,<br/>        key  = string,<br/>        units = optional(list(object({<br/>          name = string,<br/>          key  = string,<br/>          units = optional(list(object({<br/>            name = string,<br/>            key  = string,<br/>            units = optional(list(object({<br/>              name = string,<br/>              key  = string,<br/>            })), [])<br/>          })), [])<br/>        })), [])<br/>      })), [])<br/>    })), [])<br/>  })</pre> | `{}` | no |
 | <a name="input_resource_control_policies"></a> [resource\_control\_policies](#input\_resource\_control\_policies) | A map of resource control policies to apply to the organization's root. | <pre>map(object({<br/>    description = string<br/>    # A description for the resource control policy<br/>    content = string<br/>    # The content of the resource control policy<br/>    key = optional(string)<br/>    # If we created the organizational unit, this is the key to attach the policy to<br/>    target_id = optional(string)<br/>    # If the organizational unit already exists, this is the target ID to attach the policy to<br/>  }))</pre> | `{}` | no |

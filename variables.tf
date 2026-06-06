@@ -132,9 +132,15 @@ variable "enable_policy_types" {
     "AISERVICES_OPT_OUT_POLICY",
     "BACKUP_POLICY",
     "BEDROCK_POLICY",
+    "CHATBOT_POLICY",
+    "DECLARATIVE_POLICY_EC2",
+    "INSPECTOR_POLICY",
     "RESOURCE_CONTROL_POLICY",
+    "S3_POLICY",
+    "SECURITYHUB_POLICY",
     "SERVICE_CONTROL_POLICY",
     "TAG_POLICY",
+    "UPGRADE_ROLLOUT_POLICY",
   ]
 }
 
@@ -145,6 +151,21 @@ variable "ai_opt_out_policy" {
     # A description for the AI services opt-out policy
     content = string
     # The content of the AI services opt-out policy
+    key = optional(string)
+    # If we created the organizational unit, this is the key to attach the policy to
+    target_id = optional(string)
+    # If the organizational unit already exists, this is the target ID to attach the policy to
+  }))
+  default = {}
+}
+
+variable "ec2_policies" {
+  description = "A map of EC2 policies to apply to the organization's root."
+  type = map(object({
+    description = string
+    # A description for the EC2 policy
+    content = string
+    # The content of the EC2 control policy
     key = optional(string)
     # If we created the organizational unit, this is the key to attach the policy to
     target_id = optional(string)

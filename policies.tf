@@ -30,6 +30,39 @@ resource "aws_organizations_policy_attachment" "service_control_policy_attachmen
 }
 
 #
+## Provision any EC2 policies
+#
+resource "aws_organizations_policy" "ec2_policy" {
+  for_each = var.ec2_policies
+
+  name        = each.key
+  content     = each.value.content
+  description = each.value.description
+  tags        = var.tags  
+  type        = "DECLARATIVE_POLICY_EC2"
+}
+
+## Attach any EC2 policies to the organizational root
+resource "aws_organizations_policy_attachment" "ec2_policy_attachment_root" {
+  for_each = { for k, v in var.ec2_policies : k => v if v.key == "root" }
+
+  policy_id = aws_organizations_policy.ec2_policy[each.key].id
+  target_id = local.root_ou
+}
+
+## Attach any EC2 policies to the organizational units
+resource "aws_organizations_policy_attachment" "ec2_policy_attachment" {
+  for_each = { for k, v in var.ec2_policies : k => v if v.key != "root" }
+
+  policy_id = aws_organizations_policy.ec2_policy[each.key].id
+  target_id = coalesce(
+    try(each.value.target_id, null),
+    try(local.all_ou_attributes[each.value.key].id, null),
+    try(local.current_units[each.value.key], null),
+  )
+}
+
+#
 ## Provision any tagging policies
 #
 resource "aws_organizations_policy" "tagging_policy" {
