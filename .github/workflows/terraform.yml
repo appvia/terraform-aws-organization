@@ -14,19 +14,19 @@ permissions:
 
 jobs:
   validate-organization:
-    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@da2bf7ed16cc9778fedff463249466ca88069df5 # main
+    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@1199d20d99f1557a6e4984a94eb6c47a36f365e8 # main
     name: Organization Module Validation
     with:
       working-directory: examples/basic
 
   validate-delegation:
-    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@da2bf7ed16cc9778fedff463249466ca88069df5 # main
+    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@1199d20d99f1557a6e4984a94eb6c47a36f365e8 # main
     name: Delegation Module Validation
     with:
       working-directory: modules/delegation
 
   validate-service-quotas:
-    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@da2bf7ed16cc9778fedff463249466ca88069df5 # main
+    uses: appvia/appvia-cicd-workflows/.github/workflows/terraform-module-validation.yml@1199d20d99f1557a6e4984a94eb6c47a36f365e8 # main
     name: Service Quotas Module Validation
     with:
       working-directory: modules/service_quotas
