@@ -102,7 +102,7 @@ resource "aws_organizations_policy_attachment" "tagging_policy_attachment" {
 ## Provision any backup policies
 #
 resource "aws_organizations_policy" "backup_policy" {
-  for_each = { for x in var.backup_policies : x.name => x }
+  for_each = var.backup_policies
 
   name        = each.key
   content     = each.value.content
@@ -113,7 +113,7 @@ resource "aws_organizations_policy" "backup_policy" {
 
 ## Attach any backup policies to the organizational root
 resource "aws_organizations_policy_attachment" "backup_policy_attachment_root" {
-  for_each = { for x in var.backup_policies : x.name => x if x.key == "root" }
+  for_each = { for k,v in var.backup_policies : k => v if v.key == "root" }
 
   policy_id = aws_organizations_policy.backup_policy[each.key].id
   target_id = local.root_ou
@@ -121,7 +121,7 @@ resource "aws_organizations_policy_attachment" "backup_policy_attachment_root" {
 
 ## Attach any backup policies to the organizational units
 resource "aws_organizations_policy_attachment" "backup_policy_attachment" {
-  for_each = { for x in var.backup_policies : x.name => x if x.key != "root" }
+  for_each = { for k,v in var.backup_policies : k => v if v.key != "root" }
 
   policy_id = aws_organizations_policy.backup_policy[each.key].id
   target_id = coalesce(each.value.target_id, try(local.all_ou_attributes[each.value.key].id, null))
